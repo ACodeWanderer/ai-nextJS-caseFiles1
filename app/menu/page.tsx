@@ -104,17 +104,18 @@ export default function MenuPage() {
         }
 
         .menu-btn {
+          display: block; /* makes the whole button clickable */
           background: linear-gradient(135deg, #a18aff, #dcd4ff);
-          position: absolute;   /* relative to parent with position: relative */
-          bottom: 20px;
-          left: 20px;
-
-          padding: 10px 20px;
-          background: #0070f3;
           color: black;
-          border-radius: 8px;
+          padding: 20px;
+          border-radius: 14px;
+          font-size: 1.3rem;
+          font-weight: bold;
+          cursor: pointer;
+          text-align: center;
           text-decoration: none;
           box-shadow: 0 5px 15px rgba(140, 115, 255, 0.25);
+          transition: all 0.3s ease;
         }
 
         .menu-btn:hover {
@@ -124,14 +125,14 @@ export default function MenuPage() {
         }
 
         .back-btn {
-          position: absolute;  
-          bottom: 20px;        /* distance from bottom */
-          left: 20px;          /* distance from left */
+          position: fixed;  /* fixed to viewport */
+          bottom: 20px;
+          left: 20px;
           padding: 10px 20px;
           border-radius: 10px;
           background: linear-gradient(135deg, #b9a9ff, #d4c6ff);
           color: white;
-          border: 10px;
+          border: none;
           cursor: pointer;
           font-weight: bold;
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -140,8 +141,7 @@ export default function MenuPage() {
 
         .back-btn:hover {
           background-color: #4b2dbd;
-          // color: white;
-           transform: scale(1.05);
+          transform: scale(1.05);
         }
 
         @media screen and (max-width: 600px) {
