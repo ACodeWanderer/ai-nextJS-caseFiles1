@@ -9,26 +9,44 @@ export default function MenuPage() {
         <h1>CASEFILES MENU</h1>
 
         <div className="menu-grid">
-          <Link href="/playmodes" className="menu-btn">
-            🎮 Play Modes
-          </Link>
-          <Link href="/scenarios" className="menu-btn">
-            🕵️‍♂️ Scenarios
-          </Link>
-          <Link href="/training" className="menu-btn">
-            📚 Training & Research
-          </Link>
-          <Link href="/ai-engine" className="menu-btn">
-            🤖 AI Engine
-          </Link>
-          <Link href="/sandbox1" className="menu-btn">
-            🧪 Sandbox
-          </Link>
-          <Link href="/media1" className="menu-btn">
-            🎥 Media
-          </Link>
+          <div className="menu-card">
+            <Link href="/playmodes" className="menu-btn">
+              🎮 Play Modes
+            </Link>
+          </div>
+
+          <div className="menu-card">
+            <Link href="/scenarios" className="menu-btn">
+              🕵️‍♂️ Scenarios
+            </Link>
+          </div>
+
+          <div className="menu-card">
+            <Link href="/training" className="menu-btn">
+              📚 Training & Research
+            </Link>
+          </div>
+
+          <div className="menu-card">
+            <Link href="/ai-engine" className="menu-btn">
+              🤖 AI Engine
+            </Link>
+          </div>
+
+          <div className="menu-card">
+            <Link href="/sandbox1" className="menu-btn">
+              🧪 Sandbox
+            </Link>
+          </div>
+
+          <div className="menu-card">
+            <Link href="/media1" className="menu-btn">
+              🎥 Media
+            </Link>
+          </div>
         </div>
 
+        {/* Fixed Back Button */}
         <Link href="/welcome" className="back-btn">
           ← Back to Home
         </Link>
@@ -50,11 +68,13 @@ export default function MenuPage() {
           align-items: center;
           padding: 60px 20px;
           min-height: 100vh;
+          position: relative;
         }
 
         h1 {
           font-size: 3rem;
-          margin-bottom: 40px;
+          font-weight: bold;
+          margin-bottom: 50px;
           color: #4b2dbd;
           text-shadow: 0 0 8px rgba(75, 45, 189, 0.1);
           letter-spacing: 3px;
@@ -63,52 +83,65 @@ export default function MenuPage() {
         .menu-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 30px;
+          gap: 40px;
           width: 100%;
           max-width: 1000px;
         }
 
+        /* Card style */
+        .menu-card {
+          font-weight: bold;
+          background: linear-gradient(135deg, #b9a9ff, #d4c6ff);
+          border-radius: 18px;
+          padding: 20px;
+          box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .menu-card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 10px 30px rgba(100, 80, 255, 0.25);
+        }
+
         .menu-btn {
           background: linear-gradient(135deg, #a18aff, #dcd4ff);
-          color: #1e1e2e;
-          padding: 20px 30px;
-          border: none;
-          border-radius: 18px;
-          font-size: 1.3rem;
-          font-weight: bold;
-          cursor: pointer;
-          text-align: center;
-          transition: all 0.3s ease;
-          box-shadow: 0 5px 20px rgba(140, 115, 255, 0.3);
+          position: absolute;   /* relative to parent with position: relative */
+          bottom: 20px;
+          left: 20px;
+
+          padding: 10px 20px;
+          background: #0070f3;
+          color: black;
+          border-radius: 8px;
           text-decoration: none;
-          display: block;
+          box-shadow: 0 5px 15px rgba(140, 115, 255, 0.25);
         }
 
         .menu-btn:hover {
-          transform: translateY(-6px) scale(1.05);
+          transform: scale(1.05);
           background: linear-gradient(135deg, #bba4ff, #f0e9ff);
-          box-shadow: 0 0 25px rgba(100, 80, 255, 0.4);
+          box-shadow: 0 0 25px rgba(100, 80, 255, 0.35);
         }
 
         .back-btn {
-          position: fixed;
-          bottom: 20px;
-          left: 20px;
-          background-color: transparent;
-          color: #4b2dbd;
-          border: 2px solid #4b2dbd;
-          padding: 12px 20px;
-          border-radius: 25px;
-          font-size: 1.1rem;
-          font-weight: bold;
+          position: absolute;  
+          bottom: 20px;        /* distance from bottom */
+          left: 20px;          /* distance from left */
+          padding: 10px 20px;
+          border-radius: 10px;
+          background: linear-gradient(135deg, #b9a9ff, #d4c6ff);
+          color: white;
+          border: 10px;
           cursor: pointer;
-          transition: 0.3s ease;
-          text-decoration: none;
+          font-weight: bold;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+          transition: transform 0.2s ease;
         }
 
         .back-btn:hover {
           background-color: #4b2dbd;
-          color: white;
+          // color: white;
+           transform: scale(1.05);
         }
 
         @media screen and (max-width: 600px) {
@@ -119,7 +152,7 @@ export default function MenuPage() {
 
           .menu-btn {
             font-size: 1.1rem;
-            padding: 16px 20px;
+            padding: 16px;
           }
         }
       `}</style>
