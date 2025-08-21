@@ -183,3 +183,79 @@
 .welcome-fade-in {
   animation: welcomeFadeIn 1.5s ease;
 }
+
+.back-btn {
+  position: fixed; /* fixed to viewport */
+  bottom: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #b9a9ff, #d4c6ff);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.back-btn:hover {
+  background-color: #4b2dbd;
+  transform: scale(1.05);
+}
+
+.start-role-btn {
+  display: inline-block;
+  margin-top: 25px;
+  padding: 14px 28px;
+  background: #0b0b2e;
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  transition: background-color 0.3s, transform 0.3s;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+}
+
+.start-role-btn:hover {
+  background: #2c2c6e;
+  transform: scale(1.05);
+}
+
+.role-page {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  height: 100vh;
+  padding: 50px;
+  gap: 30px;
+  flex-wrap: wrap;
+  background-color: #0b0b2e;
+  color: white;
+  text-align: center;
+  font-family: "Courier New", monospace;
+}
+
+.back-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background-color: transparent;
+  border: 2px solid #7a5cff;
+  color: #7a5cff;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-family: "Orbitron", monospace;
+}
+
+.back-button:hover {
+  background-color: #7a5cff;
+  color: white;
+  transform: scale(1.05);
+}

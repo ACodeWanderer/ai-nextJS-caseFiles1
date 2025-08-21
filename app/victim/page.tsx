@@ -1,8 +1,10 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function VictimPage() {
+  const router = useRouter();
   return (
     <>
       <div className="role-page">
@@ -20,15 +22,20 @@ export default function VictimPage() {
           </Link>
         </div>
 
-        <Link href="/playmodes" className="back-button">
-          ← Back
-        </Link>
+        <button
+          className="back-btn nav-btn"
+          onClick={() => {
+            router.back();
+          }}
+        >
+          &larr; Back
+        </button>
       </div>
 
       <style jsx>{`
         body {
           margin: 0;
-          font-family: 'Courier New', monospace;
+          font-family: "Courier New", monospace;
           background-color: #0b0b2e;
           color: white;
           text-align: center;
@@ -45,7 +52,7 @@ export default function VictimPage() {
           background-color: #0b0b2e;
           color: white;
           text-align: center;
-          font-family: 'Courier New', monospace;
+          font-family: "Courier New", monospace;
         }
         .role-image {
           height: 570px;
@@ -109,5 +116,5 @@ export default function VictimPage() {
         }
       `}</style>
     </>
-  )
+  );
 }

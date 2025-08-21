@@ -1,36 +1,48 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function DetectivePage() {
+  const router = useRouter();
   return (
     <>
-      <div className="role-page">
-        <img src="/images/detective.png" alt="Lead Detective" className="role-image" />
+      <div className="role-page bg-[#0b0b2e]">
+        <img
+          src="/images/detective.png"
+          alt="Lead Detective"
+          className="role-image"
+        />
 
-        <div className="role-box">
+        <div className="relative flex w-full flex-col gap-2  role-box">
           <h2>LEAD DETECTIVE</h2>
-          <p>
+          <div>
             Follow the clues.
             <br />
             Interrogate suspects.
-          </p>
+          </div>
           <Link href="/detective-case" className="start-role-btn">
             Enter Your Case
           </Link>
         </div>
 
-        <Link href="/playmodes" className="back-button">
-          ← Back
-        </Link>
+        <button
+          className="back-btn nav-btn"
+          onClick={() => {
+            router.back();
+          }}
+        >
+          &larr; Back
+        </button>
       </div>
 
       <style jsx>{`
         body {
           margin: 0;
-          font-family: 'Courier New', monospace;
+          font-family: "Courier New", monospace;
           background-color: #0b0b2e;
-          background-image: url('/images/bg.png');
+          background-image: url("/images/bg.png");
           color: white;
           text-align: center;
         }
@@ -43,6 +55,25 @@ export default function DetectivePage() {
           padding: 50px;
           gap: 30px;
           flex-wrap: wrap;
+        }
+        .back-btn {
+          position: fixed; /* fixed to viewport */
+          bottom: 20px;
+          left: 20px;
+          padding: 10px 20px;
+          border-radius: 10px;
+          background: linear-gradient(135deg, #b9a9ff, #d4c6ff);
+          color: white;
+          border: none;
+          cursor: pointer;
+          font-weight: bold;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+          transition: transform 0.2s ease;
+        }
+
+        .back-btn:hover {
+          background-color: #4b2dbd;
+          transform: scale(1.05);
         }
         .role-image {
           height: 570px;
@@ -106,5 +137,5 @@ export default function DetectivePage() {
         }
       `}</style>
     </>
-  )
+  );
 }

@@ -1,12 +1,18 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function ForensicPage() {
+  const router = useRouter();
   return (
     <>
       <div className="role-page">
-        <img src="/images/forensic.png" alt="Forensic Expert" className="role-image" />
+        <img
+          src="/images/forensic.png"
+          alt="Forensic Expert"
+          className="role-image"
+        />
 
         <div className="role-box">
           <h2>FORENSIC EXPERT</h2>
@@ -20,15 +26,20 @@ export default function ForensicPage() {
           </Link>
         </div>
 
-        <Link href="/playmodes" className="back-button">
-          ← Back
-        </Link>
+        <button
+          className="back-btn nav-btn"
+          onClick={() => {
+            router.back();
+          }}
+        >
+          &larr; Back
+        </button>
       </div>
 
       <style jsx>{`
         .role-page {
           margin: 0;
-          font-family: 'Courier New', monospace;
+          font-family: "Courier New", monospace;
           background-color: #0b0b2e;
           color: white;
           text-align: center;
@@ -103,5 +114,5 @@ export default function ForensicPage() {
         }
       `}</style>
     </>
-  )
+  );
 }

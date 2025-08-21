@@ -28,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${orbitron.variable} ${vt323.variable} antialiased`}>
-      <body>{children}</body>
+      <body className="bg-gradient-to-r from-[#f8f8ff] to-[#eaeaff]">{children}</body>
     </html>
   )
 }

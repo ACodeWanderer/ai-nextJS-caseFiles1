@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useState, useEffect } from "react"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 // Mock data based on the provided structure
 const mockCaseData = {
@@ -9,31 +10,61 @@ const mockCaseData = {
   scenes: [
     {
       scene_id: "scene_1",
-      narration: "A storm brews over London. Inspector Lestrade knocks at 221B Baker Street with a troubling case.",
+      narration:
+        "A storm brews over London. Inspector Lestrade knocks at 221B Baker Street with a troubling case.",
       dialogues: [
-        { character: "Lestrade", speech: "A banker has been found dead in his study. No signs of forced entry." },
-        { character: "Holmes", speech: "Let us waste no time, Watson. The game is afoot." },
+        {
+          character: "Lestrade",
+          speech:
+            "A banker has been found dead in his study. No signs of forced entry.",
+        },
+        {
+          character: "Holmes",
+          speech: "Let us waste no time, Watson. The game is afoot.",
+        },
       ],
       background_audio: "rain",
       options: [
-        { option_id: "go_scene_2", description: "Visit the crime scene", next_scene: "scene_2" },
-        { option_id: "go_scene_3", description: "Interview the banker's family", next_scene: "scene_3" },
+        {
+          option_id: "go_scene_2",
+          description: "Visit the crime scene",
+          next_scene: "scene_2",
+          required_clues: [],
+        },
+        {
+          option_id: "go_scene_3",
+          description: "Interview the banker's family",
+          next_scene: "scene_3",
+          required_clues: [],
+        },
       ],
     },
     {
       scene_id: "scene_2",
-      narration: "The banker lies slumped over his desk, papers scattered. Something feels off.",
-      dialogues: [{ character: "Watson", speech: "Curious… the ink is fresh but no pen in sight." }],
+      narration:
+        "The banker lies slumped over his desk, papers scattered. Something feels off.",
+      dialogues: [
+        {
+          character: "Watson",
+          speech: "Curious… the ink is fresh but no pen in sight.",
+        },
+      ],
       background_audio: "crime_scene",
       clues: [
         {
           clue_id: "missing_pen",
           name: "Missing Fountain Pen",
-          description: "The banker's fountain pen is missing though ink was freshly used.",
+          description:
+            "The banker's fountain pen is missing though ink was freshly used.",
         },
       ],
       options: [
-        { option_id: "examine_desk", description: "Examine the desk more closely", next_scene: "scene_4" },
+        {
+          option_id: "examine_desk",
+          description: "Examine the desk more closely",
+          next_scene: "scene_4",
+          required_clues: [],
+        },
         {
           option_id: "question_secretary",
           description: "Question the secretary",
@@ -45,14 +76,33 @@ const mockCaseData = {
     {
       scene_id: "scene_3",
       narration: "The widow sobs quietly in the drawing room.",
-      dialogues: [{ character: "Widow", speech: "He seemed troubled these past weeks, but he wouldn't tell me why." }],
+      dialogues: [
+        {
+          character: "Widow",
+          speech:
+            "He seemed troubled these past weeks, but he wouldn't tell me why.",
+        },
+      ],
       background_audio: "tension",
-      options: [{ option_id: "return_to_scene_2", description: "Go to the crime scene", next_scene: "scene_2" }],
+      options: [
+        {
+          option_id: "return_to_scene_2",
+          description: "Go to the crime scene",
+          next_scene: "scene_2",
+          required_clues: [],
+        },
+      ],
     },
     {
       scene_id: "scene_4",
-      narration: "Upon closer inspection, you notice a hidden compartment in the desk drawer.",
-      dialogues: [{ character: "Holmes", speech: "Ah! What secrets did our banker hide?" }],
+      narration:
+        "Upon closer inspection, you notice a hidden compartment in the desk drawer.",
+      dialogues: [
+        {
+          character: "Holmes",
+          speech: "Ah! What secrets did our banker hide?",
+        },
+      ],
       background_audio: "discovery",
       clues: [
         {
@@ -61,7 +111,14 @@ const mockCaseData = {
           description: "Financial records showing suspicious transactions.",
         },
       ],
-      options: [{ option_id: "analyze_documents", description: "Analyze the documents", next_scene: "scene_6" }],
+      options: [
+        {
+          option_id: "analyze_documents",
+          description: "Analyze the documents",
+          next_scene: "scene_6",
+          required_clues: [],
+        },
+      ],
     },
     {
       scene_id: "scene_5",
@@ -69,71 +126,94 @@ const mockCaseData = {
       dialogues: [
         {
           character: "Secretary",
-          speech: "I... I saw him writing frantically before he died. Then the pen just vanished!",
+          speech:
+            "I... I saw him writing frantically before he died. Then the pen just vanished!",
         },
       ],
       background_audio: "tension",
-      options: [{ option_id: "press_further", description: "Press for more details", next_scene: "scene_6" }],
+      options: [
+        {
+          option_id: "press_further",
+          description: "Press for more details",
+          next_scene: "scene_6",
+          required_clues: [],
+        },
+      ],
     },
     {
       scene_id: "scene_6",
-      narration: "The pieces of the puzzle begin to fall into place. The truth emerges.",
+      narration:
+        "The pieces of the puzzle begin to fall into place. The truth emerges.",
       dialogues: [
-        { character: "Holmes", speech: "The banker discovered embezzlement in his own bank. Someone silenced him." },
+        {
+          character: "Holmes",
+          speech:
+            "The banker discovered embezzlement in his own bank. Someone silenced him.",
+        },
       ],
       background_audio: "revelation",
-      options: [{ option_id: "solve_case", description: "Solve the case", next_scene: "ending" }],
+      options: [
+        {
+          option_id: "solve_case",
+          description: "Solve the case",
+          next_scene: "ending",
+          required_clues: [],
+        },
+      ],
     },
   ],
-}
+};
 
 export default function DetectiveCasePage() {
-  const [currentScene, setCurrentScene] = useState("scene_1")
-  const [discoveredClues, setDiscoveredClues] = useState<string[]>([])
-  const [caseData, setCaseData] = useState(mockCaseData)
-  const [isLoading, setIsLoading] = useState(false)
+  const [currentScene, setCurrentScene] = useState("scene_1");
+  const [discoveredClues, setDiscoveredClues] = useState<string[]>([]);
+  const [caseData, setCaseData] = useState(mockCaseData);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   // Mock API call to fetch case data
   useEffect(() => {
     const fetchCaseData = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
       // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setCaseData(mockCaseData)
-      setIsLoading(false)
-    }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setCaseData(mockCaseData);
+      setIsLoading(false);
+    };
 
-    fetchCaseData()
-  }, [])
+    fetchCaseData();
+  }, []);
 
   const getCurrentSceneData = () => {
-    return caseData.scenes.find((scene) => scene.scene_id === currentScene)
-  }
+    return caseData.scenes.find((scene) => scene.scene_id === currentScene);
+  };
 
   const handleOptionClick = (option: any) => {
     // Check if option requires clues
     if (option.required_clues) {
-      const hasRequiredClues = option.required_clues.every((clue: string) => discoveredClues.includes(clue))
+      const hasRequiredClues = option.required_clues.every((clue: string) =>
+        discoveredClues.includes(clue)
+      );
       if (!hasRequiredClues) {
-        alert("You need more evidence before choosing this option!")
-        return
+        alert("You need more evidence before choosing this option!");
+        return;
       }
     }
 
     // Add clues from current scene if any
-    const scene = getCurrentSceneData()
+    const scene = getCurrentSceneData();
     if (scene?.clues) {
-      const newClues = scene.clues.map((clue) => clue.clue_id)
-      setDiscoveredClues((prev) => [...new Set([...prev, ...newClues])])
+      const newClues = scene.clues.map((clue) => clue.clue_id);
+      setDiscoveredClues((prev) => [...new Set([...prev, ...newClues])]);
     }
 
     if (option.next_scene === "ending") {
-      alert("Case Solved! The banker was murdered to cover up embezzlement.")
-      return
+      alert("Case Solved! The banker was murdered to cover up embezzlement.");
+      return;
     }
 
-    setCurrentScene(option.next_scene)
-  }
+    setCurrentScene(option.next_scene);
+  };
 
   if (isLoading) {
     return (
@@ -149,7 +229,7 @@ export default function DetectiveCasePage() {
             height: 100vh;
             background: linear-gradient(135deg, #0b0b2e, #1a1a4a);
             color: white;
-            font-family: 'Orbitron', monospace;
+            font-family: "Orbitron", monospace;
           }
           .loading-spinner {
             width: 50px;
@@ -161,15 +241,19 @@ export default function DetectiveCasePage() {
             margin-bottom: 20px;
           }
           @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
           }
         `}</style>
       </div>
-    )
+    );
   }
 
-  const scene = getCurrentSceneData()
+  const scene = getCurrentSceneData();
 
   if (!scene) {
     return (
@@ -177,7 +261,7 @@ export default function DetectiveCasePage() {
         <h2>Scene not found</h2>
         <Link href="/detective">Return to Detective</Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -185,7 +269,9 @@ export default function DetectiveCasePage() {
       <div className="case-container">
         <div className="case-header">
           <h1>{caseData.title}</h1>
-          <div className="clues-counter">Clues Found: {discoveredClues.length}</div>
+          <div className="clues-counter">
+            Clues Found: {discoveredClues.length}
+          </div>
         </div>
 
         <div className="scene-content">
@@ -224,7 +310,9 @@ export default function DetectiveCasePage() {
               {scene.options.map((option, index) => {
                 const isDisabled =
                   option.required_clues &&
-                  !option.required_clues.every((clue: string) => discoveredClues.includes(clue))
+                  !option.required_clues.every((clue: string) =>
+                    discoveredClues.includes(clue)
+                  );
 
                 return (
                   <button
@@ -236,7 +324,7 @@ export default function DetectiveCasePage() {
                     {option.description}
                     {isDisabled && <span className="locked-icon">🔒</span>}
                   </button>
-                )
+                );
               })}
             </div>
           </div>
@@ -247,20 +335,22 @@ export default function DetectiveCasePage() {
             <h3>Evidence Collected</h3>
             <div className="evidence-list">
               {discoveredClues.map((clueId, index) => {
-                const clue = caseData.scenes.flatMap((s) => s.clues || []).find((c) => c.clue_id === clueId)
+                const clue = caseData.scenes
+                  .flatMap((s) => s.clues || [])
+                  .find((c) => c.clue_id === clueId);
                 return clue ? (
                   <div key={index} className="evidence-item">
                     <strong>{clue.name}</strong>
                   </div>
-                ) : null
+                ) : null;
               })}
             </div>
           </div>
         )}
 
-        <Link href="/detective" className="back-button">
+        <button className="back-button" onClick={() => router.back()}>
           ← Back to Detective
-        </Link>
+        </button>
       </div>
 
       <style jsx>{`
@@ -268,7 +358,7 @@ export default function DetectiveCasePage() {
           min-height: 100vh;
           background: linear-gradient(135deg, #0b0b2e, #1a1a4a);
           color: white;
-          font-family: 'Orbitron', monospace;
+          font-family: "Orbitron", monospace;
           padding: 20px;
           position: relative;
         }
@@ -302,14 +392,20 @@ export default function DetectiveCasePage() {
           gap: 25px;
         }
 
-        .narration-box, .dialogue-section, .clues-section, .options-section {
+        .narration-box,
+        .dialogue-section,
+        .clues-section,
+        .options-section {
           background: rgba(255, 255, 255, 0.05);
           padding: 20px;
           border-radius: 12px;
           border-left: 4px solid #7a5cff;
         }
 
-        .narration-box h3, .dialogue-section h3, .clues-section h3, .options-section h3 {
+        .narration-box h3,
+        .dialogue-section h3,
+        .clues-section h3,
+        .options-section h3 {
           margin: 0 0 15px 0;
           color: #7a5cff;
           font-size: 1.3rem;
@@ -373,7 +469,7 @@ export default function DetectiveCasePage() {
           cursor: pointer;
           transition: all 0.3s ease;
           position: relative;
-          font-family: 'Orbitron', monospace;
+          font-family: "Orbitron", monospace;
         }
 
         .option-btn:hover:not(.disabled) {
@@ -433,7 +529,7 @@ export default function DetectiveCasePage() {
           font-weight: bold;
           text-decoration: none;
           transition: all 0.3s ease;
-          font-family: 'Orbitron', monospace;
+          font-family: "Orbitron", monospace;
         }
 
         .back-button:hover {
@@ -451,16 +547,16 @@ export default function DetectiveCasePage() {
             width: 100%;
             margin-top: 20px;
           }
-          
+
           .case-header h1 {
             font-size: 2rem;
           }
-          
+
           .options-grid {
             grid-template-columns: 1fr;
           }
         }
       `}</style>
     </>
-  )
+  );
 }

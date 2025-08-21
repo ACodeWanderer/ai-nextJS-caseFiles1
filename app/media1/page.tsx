@@ -1,11 +1,14 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Media1Page() {
   const handlePlayMedia = () => {
-    alert("Play Media")
-  }
+    alert("Play Media");
+  };
+
+  const router = useRouter();
 
   return (
     <div>
@@ -18,7 +21,7 @@ export default function Media1Page() {
           margin: 0;
           padding: 0;
           background: linear-gradient(135deg, #0a0a1a, #1a0040);
-          font-family: 'Segoe UI', sans-serif;
+          font-family: "Segoe UI", sans-serif;
           color: white;
           display: flex;
           flex-direction: column;
@@ -29,14 +32,14 @@ export default function Media1Page() {
           margin: 0;
           padding: 0;
           background: linear-gradient(135deg, #0a0a1a, #1a0040);
-          font-family: 'Segoe UI', sans-serif;
+          font-family: "Segoe UI", sans-serif;
           color: white;
           display: flex;
           flex-direction: column;
           align-items: center;
 
-          background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), 
-              url('/images/media1.png'); 
+          background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
+            url("/images/media1.png");
 
           background-size: cover;
           background-position: center;
@@ -97,7 +100,7 @@ export default function Media1Page() {
         }
 
         .play-icon::before {
-          content: '';
+          content: "";
           position: absolute;
           left: 32%;
           top: 25%;
@@ -139,13 +142,18 @@ export default function Media1Page() {
         }
 
         .column h2::after {
-          content: '';
+          content: "";
           position: absolute;
           left: 0;
           right: 0;
           bottom: -6px;
           height: 2px;
-          background: linear-gradient(to right, transparent, #ff00ff, transparent);
+          background: linear-gradient(
+            to right,
+            transparent,
+            #ff00ff,
+            transparent
+          );
         }
 
         .item {
@@ -157,7 +165,7 @@ export default function Media1Page() {
         }
 
         .item::before {
-          content: '▶';
+          content: "▶";
           color: #ff00ff;
           margin-right: 10px;
           font-size: 0.9em;
@@ -224,8 +232,8 @@ export default function Media1Page() {
         {/* Section 1 */}
         <h1>STEP INSIDE THE SIMULATION</h1>
         <p className="subtitle">
-          Dive into trailers, behind-the-scenes footage, case explorations, and dev logs to uncover how Casefiles comes
-          alive.
+          Dive into trailers, behind-the-scenes footage, case explorations, and
+          dev logs to uncover how Casefiles comes alive.
         </p>
 
         <div className="video-box">
@@ -260,14 +268,14 @@ export default function Media1Page() {
 
         {/* Navigation Buttons */}
         <div className="navigation-buttons">
-          <Link href="/menu" className="nav-btn">
+          <button className="nav-btn" onClick={() => router.back()}>
             ← Back
-          </Link>
-          <Link href="/media2" className="nav-btn">
+          </button>
+          <button className="nav-btn " onClick={() => router.push("/media2")}>
             Next →
-          </Link>
+          </button>
         </div>
       </div>
     </div>
-  )
+  );
 }

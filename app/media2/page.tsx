@@ -1,8 +1,10 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Media2() {
+  const router = useRouter();
   return (
     <>
       <div className="container">
@@ -32,9 +34,9 @@ export default function Media2() {
 
       {/* Navigation Buttons */}
       <div className="navigation-buttons">
-        <Link href="/media1" className="nav-btn">
+        <button className="nav-btn" onClick={() => router.back()}>
           ← Back
-        </Link>
+        </button>
       </div>
 
       <style jsx>{`
@@ -46,7 +48,7 @@ export default function Media2() {
           margin: 0;
           padding: 0;
           background: linear-gradient(to bottom, #0a0a1a, #1a0040);
-          font-family: 'Segoe UI', sans-serif;
+          font-family: "Segoe UI", sans-serif;
           color: white;
         }
 
@@ -79,13 +81,18 @@ export default function Media2() {
         }
 
         .column h2::after {
-          content: '';
+          content: "";
           position: absolute;
           left: 0;
           right: 0;
           bottom: -6px;
           height: 2px;
-          background: linear-gradient(to right, transparent, #ff00ff, transparent);
+          background: linear-gradient(
+            to right,
+            transparent,
+            #ff00ff,
+            transparent
+          );
         }
 
         .item {
@@ -97,7 +104,7 @@ export default function Media2() {
         }
 
         .item::before {
-          content: '▶';
+          content: "▶";
           color: #ff00ff;
           margin-right: 10px;
           font-size: 0.9em;
@@ -139,5 +146,5 @@ export default function Media2() {
         }
       `}</style>
     </>
-  )
+  );
 }

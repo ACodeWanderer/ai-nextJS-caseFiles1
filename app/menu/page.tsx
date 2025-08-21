@@ -1,55 +1,50 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function MenuPage() {
+  const router = useRouter();
   return (
     <>
-      <div className="menu-container">
+      <div className="menu-container ">
         <h1>CASEFILES MENU</h1>
 
         <div className="menu-grid">
-          <div className="menu-card">
-            <Link href="/playmodes" className="menu-btn">
-              🎮 Play Modes
-            </Link>
-          </div>
+          <Link href="/playmodes" className="menu-btn">
+            <div className="menu-card">🎮 Play Modes</div>
+          </Link>
 
-          <div className="menu-card">
-            <Link href="/scenarios" className="menu-btn">
-              🕵️‍♂️ Scenarios
-            </Link>
-          </div>
+          <Link href="/scenarios" className="menu-btn">
+            <div className="menu-card">🕵️‍♂️ Scenarios</div>
+          </Link>
 
-          <div className="menu-card">
-            <Link href="/training" className="menu-btn">
-              📚 Training & Research
-            </Link>
-          </div>
+          <Link href="/training" className="menu-btn">
+            <div className="menu-card">📚 Training & Research</div>
+          </Link>
 
-          <div className="menu-card">
-            <Link href="/ai-engine" className="menu-btn">
-              🤖 AI Engine
-            </Link>
-          </div>
+          <Link href="/ai-engine" className="menu-btn">
+            <div className="menu-card">🤖 AI Engine</div>
+          </Link>
 
-          <div className="menu-card">
-            <Link href="/sandbox1" className="menu-btn">
-              🧪 Sandbox
-            </Link>
-          </div>
+          <Link href="/sandbox1" className="menu-btn">
+            <div className="menu-card">🧪 Sandbox</div>
+          </Link>
 
-          <div className="menu-card">
-            <Link href="/media1" className="menu-btn">
-              🎥 Media
-            </Link>
-          </div>
+          <Link href="/media1" className="menu-btn">
+            <div className="menu-card">🎥 Media</div>
+          </Link>
         </div>
 
         {/* Fixed Back Button */}
-        <Link href="/welcome" className="back-btn">
-          ← Back to Home
-        </Link>
+        <button
+          className="back-btn nav-btn"
+          onClick={() => {
+            router.back();
+          }}
+        >
+          ⬅ Back
+        </button>
       </div>
 
       <style jsx>{`
@@ -61,7 +56,7 @@ export default function MenuPage() {
 
         .menu-container {
           background: linear-gradient(to right, #f8f8ff, #eaeaff);
-          font-family: 'Orbitron', sans-serif;
+          font-family: "Orbitron", sans-serif;
           color: #1e1e2e;
           display: flex;
           flex-direction: column;
@@ -125,7 +120,7 @@ export default function MenuPage() {
         }
 
         .back-btn {
-          position: fixed;  /* fixed to viewport */
+          position: fixed; /* fixed to viewport */
           bottom: 20px;
           left: 20px;
           padding: 10px 20px;
@@ -157,5 +152,5 @@ export default function MenuPage() {
         }
       `}</style>
     </>
-  )
+  );
 }

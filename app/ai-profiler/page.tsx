@@ -1,8 +1,10 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation";
 
 export default function AIProfilerPage() {
+  const router = useRouter();
   return (
     <>
       <div className="role-page">
@@ -20,9 +22,14 @@ export default function AIProfilerPage() {
           </Link>
         </div>
 
-        <Link href="/playmodes" className="back-button">
-          ← Back
-        </Link>
+        <button
+          className="back-btn nav-btn"
+          onClick={() => {
+            router.back();
+          }}
+        >
+          &larr; Back
+        </button>
       </div>
 
       <style jsx>{`
