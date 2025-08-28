@@ -42,7 +42,7 @@ export default function HomePage() {
 
         {/* Play Button */}
         <Link href="/welcome" className="mt-12">
-          <button className="bg-[#8c52ff] text-white px-8 py-4 rounded-full text-lg md:text-xl font-bold uppercase tracking-[2px] cursor-pointer transition-all duration-300 flex items-center gap-3 shadow-[0_0_15px_#8c52ff] hover:bg-[#a875ff] hover:scale-105 hover:shadow-[0_0_25px_#c79cff]">
+          <button className="bg-[#8c52ff] text-white px8 py-4 rounded-full text-lg md:text-xl font-bold uppercase tracking-[2px] cursor-pointer transition-all duration-300 flex items-center gap-3 shadow-[0_0_15px_#8c52ff] hover:bg-[#a875ff] hover:scale-105 hover:shadow-[0_0_25px_#c79cff]">
             PLAY NOW <span className="text-2xl">➜</span>
           </button>
         </Link>

@@ -4,13 +4,21 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 interface DialogueEntry {
-  speaker: string
-  text: string
+  character: string
+  speech: string
+}
+
+interface Clue {
+  clue_id: string
+  name: string
+  description: string
 }
 
 interface Option {
-  text: string
+  option_id: string
+  description: string
   next_scene: string
+  required_clues?: string[]
 }
 
 interface Scene {
@@ -18,7 +26,7 @@ interface Scene {
   narration: string
   dialogues: DialogueEntry[]
   background_audio: string
-  clues: string[]
+  clues: Clue[]
   options: Option[]
 }
 
@@ -29,29 +37,68 @@ const mockData: Scene[] = [
       "The morning sun filters through the glass pyramid of the Louvre, casting geometric shadows across the marble floors of the world's most prestigious museum. Detective Amélie Dubois stands before the empty frame where Leonardo da Vinci's 'La Belle Ferronnière' once hung, her trained eyes scanning every detail of the crime scene. The security tape shows nothing unusual from the previous evening, yet somehow, one of the most valuable paintings in human history has vanished without a trace. The museum's director, Monsieur Beaumont, paces nervously behind her, his hands trembling as he explains the impossible situation. The painting was there during the final security check at 11 PM, but when the morning shift arrived, they found only an empty frame and a small white card left in its place. The card bears a single line in elegant script: 'Art belongs to those who truly understand its beauty.' The theft has sent shockwaves through the international art world, and the pressure to solve this case quickly is immense.",
     dialogues: [
       {
-        speaker: "Director Beaumont",
-        text: "Detective Dubois, this is catastrophic! The 'La Belle Ferronnière' is worth over 100 million euros. How could someone simply walk out with it?",
+        character: "Director Beaumont",
+        speech:
+          "Detective Dubois, this is catastrophic! The 'La Belle Ferronnière' is worth over 100 million euros. How could someone simply walk out with it?",
       },
       {
-        speaker: "Detective Dubois",
-        text: "Monsieur Beaumont, I need you to remain calm. Tell me, who had access to this wing after closing hours?",
+        character: "Detective Dubois",
+        speech:
+          "Monsieur Beaumont, I need you to remain calm. Tell me, who had access to this wing after closing hours?",
       },
       {
-        speaker: "Director Beaumont",
-        text: "Only our senior staff: the night security guards, the chief curator Dr. Moreau, and myself. But surely none of them would...",
+        character: "Director Beaumont",
+        speech:
+          "Only our senior staff: the night security guards, the chief curator Dr. Moreau, and myself. But surely none of them would...",
       },
       {
-        speaker: "Detective Dubois",
-        text: "In my experience, the impossible often becomes possible when we examine it closely. I'll need a complete list of everyone with access.",
+        character: "Detective Dubois",
+        speech:
+          "In my experience, the impossible often becomes possible when we examine it closely. I'll need a complete list of everyone with access.",
       },
     ],
-    background_audio: "Soft classical music with footsteps echoing in marble halls",
-    clues: ["empty_frame", "mysterious_card", "access_list"],
+    background_audio: "mystery",
+    clues: [
+      {
+        clue_id: "empty_frame",
+        name: "Empty Frame",
+        description:
+          "The ornate golden frame that once held La Belle Ferronnière, now containing only mounting hardware and a faint outline where the painting once hung.",
+      },
+      {
+        clue_id: "mysterious_card",
+        name: "Mysterious Card",
+        description:
+          "A small white card left at the crime scene with elegant script reading: 'Art belongs to those who truly understand its beauty.'",
+      },
+      {
+        clue_id: "access_list",
+        name: "Access List",
+        description:
+          "A complete roster of all personnel with after-hours access to the Renaissance wing, including security guards, curators, and administrative staff.",
+      },
+    ],
     options: [
-      { text: "Interview the night security guards first", next_scene: "scene_2" },
-      { text: "Examine the security footage in detail", next_scene: "scene_3" },
-      { text: "Speak with Dr. Moreau, the chief curator", next_scene: "scene_4" },
-      { text: "Investigate the museum's recent acquisitions", next_scene: "scene_5" },
+      {
+        option_id: "opt_1_1",
+        description: "Interview the night security guards first",
+        next_scene: "scene_2",
+      },
+      {
+        option_id: "opt_1_2",
+        description: "Examine the security footage in detail",
+        next_scene: "scene_3",
+      },
+      {
+        option_id: "opt_1_3",
+        description: "Speak with Dr. Moreau, the chief curator",
+        next_scene: "scene_4",
+      },
+      {
+        option_id: "opt_1_4",
+        description: "Investigate the museum's recent acquisitions",
+        next_scene: "scene_5",
+      },
     ],
   },
   {
@@ -60,33 +107,71 @@ const mockData: Scene[] = [
       "The security office is a cramped space filled with monitors displaying feeds from hundreds of cameras throughout the Louvre's vast corridors and galleries. Guard Captain Henri Rousseau, a weathered man in his fifties with tired eyes, reviews the footage with you while his colleague, young Marcel Petit, shifts nervously in the corner. The timestamp shows 10:47 PM when Rousseau made his final rounds, checking each gallery methodically as he has done for the past fifteen years. Marcel, who started working at the museum only three months ago, was stationed at the main entrance throughout the night, monitoring the central security panel. As you watch the grainy footage, you notice something peculiar: there's a brief moment around 2:30 AM where the camera feed from the Renaissance wing flickers and goes dark for exactly forty-seven seconds. When it returns, everything appears normal, but you can't shake the feeling that this brief blackout is significant. Rousseau insists that no alarms were triggered during his shift, and the electronic logs show no unauthorized entries. However, Marcel seems increasingly uncomfortable as you question them, his hands fidgeting with his security badge.",
     dialogues: [
       {
-        speaker: "Captain Rousseau",
-        text: "I've been guarding these halls for fifteen years, Detective. Nothing gets past me. I checked every gallery, every door, every window.",
+        character: "Captain Rousseau",
+        speech:
+          "I've been guarding these halls for fifteen years, Detective. Nothing gets past me. I checked every gallery, every door, every window.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "What about this camera blackout at 2:30 AM? That seems rather convenient timing.",
+        character: "Detective Dubois",
+        speech: "What about this camera blackout at 2:30 AM? That seems rather convenient timing.",
       },
       {
-        speaker: "Marcel Petit",
-        text: "I... I remember that. The system said it was just a routine maintenance reset. It happens sometimes with the older cameras.",
+        character: "Marcel Petit",
+        speech:
+          "I... I remember that. The system said it was just a routine maintenance reset. It happens sometimes with the older cameras.",
       },
       {
-        speaker: "Captain Rousseau",
-        text: "Marcel's right. The Renaissance wing cameras are due for replacement. But I was in that area around 2:15 AM - everything was secure.",
+        character: "Captain Rousseau",
+        speech:
+          "Marcel's right. The Renaissance wing cameras are due for replacement. But I was in that area around 2:15 AM - everything was secure.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "Marcel, you seem nervous. Is there something you're not telling me about last night?",
+        character: "Detective Dubois",
+        speech: "Marcel, you seem nervous. Is there something you're not telling me about last night?",
       },
     ],
-    background_audio: "Humming of electronic equipment and distant footsteps",
-    clues: ["camera_blackout", "nervous_guard", "maintenance_reset"],
+    background_audio: "tension",
+    clues: [
+      {
+        clue_id: "camera_blackout",
+        name: "Camera Blackout",
+        description:
+          "A suspicious 47-second blackout of the Renaissance wing security cameras at exactly 2:30 AM, coinciding with the estimated time of the theft.",
+      },
+      {
+        clue_id: "nervous_guard",
+        name: "Nervous Guard",
+        description:
+          "Marcel Petit's unusual nervousness and fidgeting behavior during questioning, suggesting he may know more than he's revealing.",
+      },
+      {
+        clue_id: "maintenance_reset",
+        name: "Maintenance Reset",
+        description:
+          "The system's explanation for the camera blackout as a routine maintenance reset, though no maintenance was officially scheduled.",
+      },
+    ],
     options: [
-      { text: "Press Marcel about his nervousness", next_scene: "scene_6" },
-      { text: "Examine the camera maintenance logs", next_scene: "scene_7" },
-      { text: "Check the Renaissance wing for physical evidence", next_scene: "scene_8" },
-      { text: "Interview other museum staff about Marcel", next_scene: "scene_9" },
+      {
+        option_id: "opt_2_1",
+        description: "Press Marcel about his nervousness",
+        next_scene: "scene_6",
+      },
+      {
+        option_id: "opt_2_2",
+        description: "Examine the camera maintenance logs",
+        next_scene: "scene_7",
+      },
+      {
+        option_id: "opt_2_3",
+        description: "Check the Renaissance wing for physical evidence",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "opt_2_4",
+        description: "Interview other museum staff about Marcel",
+        next_scene: "scene_9",
+      },
     ],
   },
   {
@@ -95,33 +180,72 @@ const mockData: Scene[] = [
       "In the museum's high-tech surveillance center, you spend hours meticulously reviewing footage from multiple camera angles, searching for any anomaly that might explain the impossible theft. The Louvre's security system is state-of-the-art, with motion sensors, pressure plates, and infrared beams creating an intricate web of protection around each priceless artwork. As you scrub through the timeline, you notice several interesting details: at 11:15 PM, a figure in a maintenance uniform appears briefly in the corridor outside the Renaissance wing, but the image is too blurry to make out facial features. The person carries what appears to be a standard cleaning cart, nothing unusual for the night maintenance crew. However, when you cross-reference this with the maintenance schedule provided by the museum administration, you discover that no cleaning was scheduled for that wing on that particular night. The figure disappears from view around the corner, and despite checking multiple camera angles, you cannot track their movements further. Most intriguingly, the timestamp on several cameras shows a slight discrepancy - some are running three minutes and twenty-seven seconds behind others, suggesting possible tampering with the system's internal clock. This level of technical sophistication indicates that the thief had intimate knowledge of the museum's security infrastructure.",
     dialogues: [
       {
-        speaker: "Security Technician",
-        text: "Detective, I've never seen anything like this. The timestamp discrepancies suggest someone with advanced knowledge of our system.",
+        character: "Security Technician",
+        speech:
+          "Detective, I've never seen anything like this. The timestamp discrepancies suggest someone with advanced knowledge of our system.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "Who would have access to modify the camera timestamps? This isn't something an amateur could accomplish.",
+        character: "Detective Dubois",
+        speech:
+          "Who would have access to modify the camera timestamps? This isn't something an amateur could accomplish.",
       },
       {
-        speaker: "Security Technician",
-        text: "Only our IT department and the security company that installed the system. But they're all thoroughly vetted.",
+        character: "Security Technician",
+        speech:
+          "Only our IT department and the security company that installed the system. But they're all thoroughly vetted.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "What about this maintenance worker at 11:15 PM? Can you enhance the image?",
+        character: "Detective Dubois",
+        speech: "What about this maintenance worker at 11:15 PM? Can you enhance the image?",
       },
       {
-        speaker: "Security Technician",
-        text: "I'll try, but the resolution is poor. However, I notice they're using a cart that was reported missing from storage two weeks ago.",
+        character: "Security Technician",
+        speech:
+          "I'll try, but the resolution is poor. However, I notice they're using a cart that was reported missing from storage two weeks ago.",
       },
     ],
-    background_audio: "Clicking of keyboards and whirring of computer fans",
-    clues: ["timestamp_discrepancy", "fake_maintenance", "missing_cart"],
+    background_audio: "surveillance",
+    clues: [
+      {
+        clue_id: "timestamp_discrepancy",
+        name: "Timestamp Discrepancy",
+        description:
+          "Inconsistencies in the camera timestamps, with some cameras running several seconds behind others, indicating possible tampering.",
+      },
+      {
+        clue_id: "fake_maintenance",
+        name: "Fake Maintenance",
+        description:
+          "A figure in a maintenance uniform appearing on security footage at 11:15 PM, despite no maintenance being scheduled for that night.",
+      },
+      {
+        clue_id: "missing_cart",
+        name: "Missing Cart",
+        description:
+          "The maintenance worker using a cart that was reported missing from storage two weeks prior to the theft.",
+      },
+    ],
     options: [
-      { text: "Investigate the missing maintenance cart", next_scene: "scene_6" },
-      { text: "Check the IT department's access logs", next_scene: "scene_7" },
-      { text: "Interview the security company employees", next_scene: "scene_8" },
-      { text: "Examine the maintenance uniform storage", next_scene: "scene_9" },
+      {
+        option_id: "opt_3_1",
+        description: "Investigate the missing maintenance cart",
+        next_scene: "scene_6",
+      },
+      {
+        option_id: "opt_3_2",
+        description: "Check the IT department's access logs",
+        next_scene: "scene_7",
+      },
+      {
+        option_id: "opt_3_3",
+        description: "Interview the security company employees",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "opt_3_4",
+        description: "Examine the maintenance uniform storage",
+        next_scene: "scene_9",
+      },
     ],
   },
   {
@@ -130,33 +254,72 @@ const mockData: Scene[] = [
       "Dr. Céleste Moreau's office is a testament to her passion for Renaissance art, with reproductions of masterpieces covering every wall and art history books stacked high on her mahogany desk. As the Louvre's chief curator for over two decades, she has an encyclopedic knowledge of every piece in the museum's collection and has personally overseen the acquisition of dozens of priceless works. Her reaction to the theft is one of genuine anguish, as if she has lost a dear friend rather than simply a valuable painting. She explains that 'La Belle Ferronnière' was scheduled to be moved to a special climate-controlled storage facility next week for conservation work, a detail that was known only to a select few museum officials. As she speaks, you notice her hands shake slightly when she mentions the painting's provenance, and she seems particularly distressed about recent rumors in the art world regarding the authenticity of several Renaissance works. Dr. Moreau reveals that she has been receiving anonymous letters over the past month, questioning her expertise and suggesting that some of the Louvre's most prized possessions might be elaborate forgeries. The letters, written in the same elegant script as the card left at the crime scene, have been causing her considerable stress and sleepless nights. She admits that she has been conducting private research to verify the authenticity of several works, including the stolen painting.",
     dialogues: [
       {
-        speaker: "Dr. Moreau",
-        text: "Detective, this painting was like a child to me. I've studied every brushstroke, every crack in the varnish. Its loss is... devastating.",
+        character: "Dr. Moreau",
+        speech:
+          "Detective, this painting was like a child to me. I've studied every brushstroke, every crack in the varnish. Its loss is... devastating.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "You mentioned anonymous letters questioning the authenticity of museum pieces. Can you show me these letters?",
+        character: "Detective Dubois",
+        speech:
+          "You mentioned anonymous letters questioning the authenticity of museum pieces. Can you show me these letters?",
       },
       {
-        speaker: "Dr. Moreau",
-        text: "They're here in my desk. The handwriting is identical to the card left at the crime scene. Someone is trying to undermine my life's work.",
+        character: "Dr. Moreau",
+        speech:
+          "They're here in my desk. The handwriting is identical to the card left at the crime scene. Someone is trying to undermine my life's work.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "Who knew about the planned move to storage? That seems like valuable information for a thief.",
+        character: "Detective Dubois",
+        speech: "Who knew about the planned move to storage? That seems like valuable information for a thief.",
       },
       {
-        speaker: "Dr. Moreau",
-        text: "Only myself, Director Beaumont, and the conservation team. But surely you don't suspect... oh, this is all my fault for not being more careful.",
+        character: "Dr. Moreau",
+        speech:
+          "Only myself, Director Beaumont, and the conservation team. But surely you don't suspect... oh, this is all my fault for not being more careful.",
       },
     ],
-    background_audio: "Soft classical music with pages turning and clock ticking",
-    clues: ["anonymous_letters", "planned_storage_move", "authenticity_doubts"],
+    background_audio: "classical",
+    clues: [
+      {
+        clue_id: "anonymous_letters",
+        name: "Anonymous Letters",
+        description:
+          "A series of anonymous letters received by Dr. Moreau, questioning the authenticity of several Renaissance works in the Louvre.",
+      },
+      {
+        clue_id: "planned_storage_move",
+        name: "Planned Storage Move",
+        description:
+          "The fact that 'La Belle Ferronnière' was scheduled to be moved to a climate-controlled storage facility the following week.",
+      },
+      {
+        clue_id: "authenticity_doubts",
+        name: "Authenticity Doubts",
+        description:
+          "Rumors circulating in the art world regarding the authenticity of several Renaissance works, including the stolen painting.",
+      },
+    ],
     options: [
-      { text: "Analyze the handwriting on the anonymous letters", next_scene: "scene_6" },
-      { text: "Interview the conservation team", next_scene: "scene_7" },
-      { text: "Investigate Dr. Moreau's recent research", next_scene: "scene_8" },
-      { text: "Check if other museums have received similar letters", next_scene: "scene_9" },
+      {
+        option_id: "opt_4_1",
+        description: "Analyze the handwriting on the anonymous letters",
+        next_scene: "scene_6",
+      },
+      {
+        option_id: "opt_4_2",
+        description: "Interview the conservation team",
+        next_scene: "scene_7",
+      },
+      {
+        option_id: "opt_4_3",
+        description: "Investigate Dr. Moreau's recent research",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "opt_4_4",
+        description: "Check if other museums have received similar letters",
+        next_scene: "scene_9",
+      },
     ],
   },
   {
@@ -165,30 +328,68 @@ const mockData: Scene[] = [
       "The museum's acquisition records reveal a fascinating web of recent purchases and donations that paint a complex picture of the international art market. Over the past six months, the Louvre has acquired three significant Renaissance pieces through a prominent art dealer named Vincent Delacroix, whose gallery on the Right Bank has become increasingly influential in Parisian art circles. Delacroix's transactions show an unusual pattern: he has been aggressively pursuing works from the same period as the stolen painting, often outbidding established collectors and institutions with seemingly unlimited resources. Your investigation reveals that Delacroix has a complicated history with the Louvre - five years ago, he was involved in a bitter legal dispute over the attribution of a Caravaggio painting, which he claimed the museum had acquired through questionable means. The case was settled out of court, but sources suggest that Delacroix harbored deep resentment toward the institution and its curators. More intriguingly, financial records show that Delacroix has been experiencing significant cash flow problems recently, with several major deals falling through and creditors becoming increasingly aggressive. His gallery's insurance policies have been mysteriously increased over the past month, and he has been making inquiries about private collectors who prefer to acquire art through unconventional channels. The timing of these activities, coinciding with the theft, raises serious questions about his potential involvement.",
     dialogues: [
       {
-        speaker: "Museum Registrar",
-        text: "Detective, Vincent Delacroix has been quite active lately. Three major acquisitions in six months - that's unusual even for someone of his stature.",
+        character: "Museum Registrar",
+        speech:
+          "Detective, Vincent Delacroix has been quite active lately. Three major acquisitions in six months - that's unusual even for someone of his stature.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "Tell me about this legal dispute five years ago. What exactly happened with the Caravaggio?",
+        character: "Detective Dubois",
+        speech: "Tell me about this legal dispute five years ago. What exactly happened with the Caravaggio?",
       },
       {
-        speaker: "Museum Registrar",
-        text: "Delacroix claimed we knowingly purchased a work with questionable provenance. He was quite vocal about it, accused us of damaging his reputation.",
+        character: "Museum Registrar",
+        speech:
+          "Delacroix claimed we knowingly purchased a work with questionable provenance. He was quite vocal about it, accused us of damaging his reputation.",
       },
-      { speaker: "Detective Dubois", text: "And his recent financial troubles? How severe are they?" },
+      { character: "Detective Dubois", speech: "And his recent financial troubles? How severe are they?" },
       {
-        speaker: "Museum Registrar",
-        text: "From what I hear through the art world grapevine, quite severe. Desperate men sometimes do desperate things, Detective.",
+        character: "Museum Registrar",
+        speech:
+          "From what I hear through the art world grapevine, quite severe. Desperate men sometimes do desperate things, Detective.",
       },
     ],
-    background_audio: "Rustling papers and distant museum ambiance",
-    clues: ["delacroix_acquisitions", "legal_dispute", "financial_troubles"],
+    background_audio: "paperwork",
+    clues: [
+      {
+        clue_id: "delacroix_acquisitions",
+        name: "Delacroix Acquisitions",
+        description:
+          "The Louvre's recent acquisition of three significant Renaissance pieces through art dealer Vincent Delacroix.",
+      },
+      {
+        clue_id: "legal_dispute",
+        name: "Legal Dispute",
+        description:
+          "Vincent Delacroix's bitter legal dispute with the Louvre five years ago over the attribution of a Caravaggio painting.",
+      },
+      {
+        clue_id: "financial_troubles",
+        name: "Financial Troubles",
+        description:
+          "Vincent Delacroix's recent financial difficulties, including cash flow problems and increased insurance policies.",
+      },
+    ],
     options: [
-      { text: "Visit Delacroix's gallery immediately", next_scene: "scene_6" },
-      { text: "Investigate the Caravaggio dispute further", next_scene: "scene_7" },
-      { text: "Check Delacroix's recent insurance claims", next_scene: "scene_8" },
-      { text: "Interview other art dealers about Delacroix", next_scene: "scene_9" },
+      {
+        option_id: "opt_5_1",
+        description: "Visit Delacroix's gallery immediately",
+        next_scene: "scene_6",
+      },
+      {
+        option_id: "opt_5_2",
+        description: "Investigate the Caravaggio dispute further",
+        next_scene: "scene_7",
+      },
+      {
+        option_id: "opt_5_3",
+        description: "Check Delacroix's recent insurance claims",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "opt_5_4",
+        description: "Interview other art dealers about Delacroix",
+        next_scene: "scene_9",
+      },
     ],
   },
   {
@@ -197,30 +398,68 @@ const mockData: Scene[] = [
       "Your investigation leads you deeper into the labyrinthine world of art theft and deception, where nothing is quite as it appears on the surface. The evidence you've gathered begins to form a clearer picture, but several crucial pieces of the puzzle remain frustratingly elusive. Marcel Petit's nervous behavior becomes more pronounced under questioning, and he eventually admits to accepting a small bribe from an unknown individual to temporarily disable the camera in the Renaissance wing during his shift. He claims he thought it was just someone wanting to take unauthorized photographs, not commit a major theft, and his genuine distress suggests he's telling the truth about his limited involvement. The missing maintenance cart is discovered in a storage room three floors below the Renaissance wing, wiped clean of fingerprints but containing traces of a specialized art handling foam used to protect valuable paintings during transport. Vincent Delacroix's gallery, when you visit it, appears to be in the midst of a hasty reorganization, with several empty spaces on the walls where paintings once hung and packing materials scattered throughout the showroom. Delacroix himself is nowhere to be found, and his assistant claims he left suddenly for an 'urgent business trip' to Switzerland, a country known for its discrete private banking and art storage facilities. The handwriting analysis of the anonymous letters reveals they were written by someone with formal training in calligraphy, suggesting an educated individual with artistic sensibilities.",
     dialogues: [
       {
-        speaker: "Marcel Petit",
-        text: "I swear, Detective, I thought it was just some art student wanting to sketch the paintings! They gave me 500 euros just to turn off one camera for an hour.",
+        character: "Marcel Petit",
+        speech:
+          "I swear, Detective, I thought it was just some art student wanting to sketch the paintings! They gave me 500 euros just to turn off one camera for an hour.",
       },
-      { speaker: "Detective Dubois", text: "Describe this person who bribed you. Every detail you can remember." },
+      { character: "Detective Dubois", speech: "Describe this person who bribed you. Every detail you can remember." },
       {
-        speaker: "Marcel Petit",
-        text: "They wore a hat and kept their face hidden. But they knew exactly which camera to disable and when. This wasn't random.",
-      },
-      {
-        speaker: "Gallery Assistant",
-        text: "Monsieur Delacroix left very suddenly yesterday morning. He seemed... agitated. Said something about a once-in-a-lifetime opportunity.",
+        character: "Marcel Petit",
+        speech:
+          "They wore a hat and kept their face hidden. But they knew exactly which camera to disable and when. This wasn't random.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "What about these empty spaces on the walls? Were there paintings here recently?",
+        character: "Gallery Assistant",
+        speech:
+          "Monsieur Delacroix left very suddenly yesterday morning. He seemed... agitated. Said something about a once-in-a-lifetime opportunity.",
+      },
+      {
+        character: "Detective Dubois",
+        speech: "What about these empty spaces on the walls? Were there paintings here recently?",
       },
     ],
-    background_audio: "Tense music with footsteps and distant traffic",
-    clues: ["bribed_guard", "art_handling_foam", "delacroix_fled"],
+    background_audio: "suspense",
+    clues: [
+      {
+        clue_id: "bribed_guard",
+        name: "Bribed Guard",
+        description:
+          "Marcel Petit's admission of accepting a bribe to disable the camera in the Renaissance wing during his shift.",
+      },
+      {
+        clue_id: "art_handling_foam",
+        name: "Art Handling Foam",
+        description:
+          "Traces of specialized art handling foam found in the missing maintenance cart, suggesting it was used to transport the stolen painting.",
+      },
+      {
+        clue_id: "delacroix_fled",
+        name: "Delacroix Fled",
+        description:
+          "Vincent Delacroix's sudden departure for Switzerland, a country known for its discrete private banking and art storage facilities.",
+      },
+    ],
     options: [
-      { text: "Track Delacroix's movements to Switzerland", next_scene: "scene_10" },
-      { text: "Analyze the art handling foam for more clues", next_scene: "scene_7" },
-      { text: "Interview the person who trained Marcel", next_scene: "scene_8" },
-      { text: "Check international art theft databases", next_scene: "scene_9" },
+      {
+        option_id: "opt_6_1",
+        description: "Track Delacroix's movements to Switzerland",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "opt_6_2",
+        description: "Analyze the art handling foam for more clues",
+        next_scene: "scene_7",
+      },
+      {
+        option_id: "opt_6_3",
+        description: "Interview the person who trained Marcel",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "opt_6_4",
+        description: "Check international art theft databases",
+        next_scene: "scene_9",
+      },
     ],
   },
   {
@@ -229,33 +468,72 @@ const mockData: Scene[] = [
       "The forensic analysis of the art handling foam reveals a crucial breakthrough that shifts the entire direction of your investigation. The foam contains microscopic fibers that match a very specific type of silk used in high-end art restoration work, available only from a handful of specialized suppliers worldwide. More importantly, embedded within the foam are traces of a unique varnish compound that was developed exclusively for the conservation of Renaissance paintings and is used by only three institutions in Europe - one of which is the Louvre's own conservation laboratory. This discovery suggests that the theft was an inside job involving someone with intimate knowledge of art handling procedures and access to specialized materials. The IT department's access logs reveal that someone used Dr. Moreau's credentials to modify the camera system's timestamp settings three days before the theft, but the login occurred at 3 AM when Dr. Moreau was documented to be at a conference in Rome. The security company's employee records show that one of their technicians, Jean-Baptiste Mercier, has been making unauthorized visits to the museum outside of his scheduled maintenance windows, claiming to be conducting 'preventive diagnostics' on the security system. Mercier's background check reveals a fascinating detail: he studied art history before switching to security technology, and his thesis was on the authentication methods used to verify Renaissance paintings. The convergence of technical expertise and art historical knowledge makes him a person of significant interest in the investigation.",
     dialogues: [
       {
-        speaker: "Forensic Analyst",
-        text: "Detective, this varnish compound is like a fingerprint. Only three places in Europe use it, and the Louvre is one of them.",
+        character: "Forensic Analyst",
+        speech:
+          "Detective, this varnish compound is like a fingerprint. Only three places in Europe use it, and the Louvre is one of them.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "So our thief either works here or has access to our conservation materials. That narrows it down considerably.",
+        character: "Detective Dubois",
+        speech:
+          "So our thief either works here or has access to our conservation materials. That narrows it down considerably.",
       },
       {
-        speaker: "IT Specialist",
-        text: "The timestamp modification was definitely done with Dr. Moreau's credentials, but she was in Rome. Someone cloned her access.",
+        character: "IT Specialist",
+        speech:
+          "The timestamp modification was definitely done with Dr. Moreau's credentials, but she was in Rome. Someone cloned her access.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "What about this Jean-Baptiste Mercier? His unauthorized visits seem suspicious.",
+        character: "Detective Dubois",
+        speech: "What about this Jean-Baptiste Mercier? His unauthorized visits seem suspicious.",
       },
       {
-        speaker: "Security Manager",
-        text: "Mercier is one of our best technicians, but he has been asking a lot of questions about our art handling procedures lately.",
+        character: "Security Manager",
+        speech:
+          "Mercier is one of our best technicians, but he has been asking a lot of questions about our art handling procedures lately.",
       },
     ],
-    background_audio: "Laboratory sounds with computer beeping and analysis equipment",
-    clues: ["conservation_varnish", "cloned_credentials", "mercier_visits"],
+    background_audio: "laboratory",
+    clues: [
+      {
+        clue_id: "conservation_varnish",
+        name: "Conservation Varnish",
+        description:
+          "Traces of a unique varnish compound found in the art handling foam, used exclusively for the conservation of Renaissance paintings and used by the Louvre.",
+      },
+      {
+        clue_id: "cloned_credentials",
+        name: "Cloned Credentials",
+        description:
+          "The IT department's discovery that someone used Dr. Moreau's credentials to modify the camera system's timestamp settings while she was in Rome.",
+      },
+      {
+        clue_id: "mercier_visits",
+        name: "Mercier Visits",
+        description:
+          "Jean-Baptiste Mercier's unauthorized visits to the museum outside of his scheduled maintenance windows.",
+      },
+    ],
     options: [
-      { text: "Confront Jean-Baptiste Mercier directly", next_scene: "scene_10" },
-      { text: "Set up surveillance on the conservation lab", next_scene: "scene_8" },
-      { text: "Check Mercier's art history thesis", next_scene: "scene_9" },
-      { text: "Interview Dr. Moreau about her stolen credentials", next_scene: "scene_6" },
+      {
+        option_id: "opt_7_1",
+        description: "Confront Jean-Baptiste Mercier directly",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "opt_7_2",
+        description: "Set up surveillance on the conservation lab",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "opt_7_3",
+        description: "Check Mercier's art history thesis",
+        next_scene: "scene_9",
+      },
+      {
+        option_id: "opt_7_4",
+        description: "Interview Dr. Moreau about her stolen credentials",
+        next_scene: "scene_6",
+      },
     ],
   },
   {
@@ -264,33 +542,72 @@ const mockData: Scene[] = [
       "The conservation laboratory hidden in the basement levels of the Louvre is a world unto itself, filled with microscopes, chemical baths, and climate-controlled chambers where priceless artworks undergo meticulous restoration. Your surveillance of the area reveals that Jean-Baptiste Mercier has been making regular visits here, ostensibly to maintain the environmental control systems but actually spending considerable time examining the authentication equipment used to verify the age and composition of paintings. The lab's director, Dr. Elisabeth Fontaine, expresses concern about Mercier's unusual interest in their work, particularly his questions about how to detect and replicate the aging processes that give Renaissance paintings their distinctive characteristics. A thorough search of Mercier's work area uncovers a hidden compartment containing detailed photographs of 'La Belle Ferronnière,' including close-up shots of the painting's signature, brushwork patterns, and areas of deliberate damage that art historians use for authentication purposes. More damning still, you discover a partially completed forgery of the stolen painting, executed with remarkable skill but lacking the subtle imperfections that would make it truly convincing to experts. The forgery is painted on a canvas that has been artificially aged using techniques that Mercier could have learned from observing the conservation team's work. However, as you examine the evidence more closely, you realize that while Mercier clearly intended to create a forgery, the theft itself required a level of coordination and inside knowledge that suggests he was not working alone.",
     dialogues: [
       {
-        speaker: "Dr. Fontaine",
-        text: "Jean-Baptiste has been asking very specific questions about our authentication methods. I thought he was just curious, but now...",
+        character: "Dr. Fontaine",
+        speech:
+          "Jean-Baptiste has been asking very specific questions about our authentication methods. I thought he was just curious, but now...",
       },
       {
-        speaker: "Detective Dubois",
-        text: "This forgery is remarkably skilled. Mercier clearly has artistic talent beyond his technical abilities.",
+        character: "Detective Dubois",
+        speech:
+          "This forgery is remarkably skilled. Mercier clearly has artistic talent beyond his technical abilities.",
       },
       {
-        speaker: "Dr. Fontaine",
-        text: "The aging techniques used on this canvas are exactly what we use in our restoration work. He's been watching and learning.",
+        character: "Dr. Fontaine",
+        speech:
+          "The aging techniques used on this canvas are exactly what we use in our restoration work. He's been watching and learning.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "But creating a forgery and stealing the original are different crimes. Who else knew about his activities?",
+        character: "Detective Dubois",
+        speech:
+          "But creating a forgery and stealing the original are different crimes. Who else knew about his activities?",
       },
       {
-        speaker: "Conservation Assistant",
-        text: "Detective, I saw him here late one night with another person. They were discussing something about 'the switch' but I didn't think much of it.",
+        character: "Conservation Assistant",
+        speech:
+          "Detective, I saw him here late one night with another person. They were discussing something about 'the switch' but I didn't think much of it.",
       },
     ],
-    background_audio: "Quiet laboratory ambiance with ventilation systems and equipment humming",
-    clues: ["mercier_forgery", "authentication_photos", "accomplice_mentioned"],
+    background_audio: "restoration",
+    clues: [
+      {
+        clue_id: "mercier_forgery",
+        name: "Mercier Forgery",
+        description: "The discovery of a partially completed forgery of 'La Belle Ferronnière' in Mercier's work area.",
+      },
+      {
+        clue_id: "authentication_photos",
+        name: "Authentication Photos",
+        description:
+          "Detailed photographs of 'La Belle Ferronnière,' including close-up shots of the painting's signature and brushwork patterns, found in Mercier's possession.",
+      },
+      {
+        clue_id: "accomplice_mentioned",
+        name: "Accomplice Mentioned",
+        description:
+          "A conservation assistant's statement about seeing Mercier late one night with another person, discussing something about 'the switch.'",
+      },
+    ],
     options: [
-      { text: "Find out who Mercier's accomplice was", next_scene: "scene_10" },
-      { text: "Analyze the forgery for more clues", next_scene: "scene_9" },
-      { text: "Check security footage of Mercier's late-night visits", next_scene: "scene_7" },
-      { text: "Confront the conservation assistant about what they saw", next_scene: "scene_6" },
+      {
+        option_id: "opt_8_1",
+        description: "Find out who Mercier's accomplice was",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "opt_8_2",
+        description: "Analyze the forgery for more clues",
+        next_scene: "scene_9",
+      },
+      {
+        option_id: "opt_8_3",
+        description: "Check security footage of Mercier's late-night visits",
+        next_scene: "scene_7",
+      },
+      {
+        option_id: "opt_8_4",
+        description: "Confront the conservation assistant about what they saw",
+        next_scene: "scene_6",
+      },
     ],
   },
   {
@@ -299,33 +616,72 @@ const mockData: Scene[] = [
       "The final pieces of the puzzle begin to fall into place as you uncover the sophisticated network behind the Louvre theft, revealing a conspiracy that goes far deeper than a simple art heist. Jean-Baptiste Mercier's art history thesis, titled 'The Economics of Authentication: How Market Forces Shape Art Historical Truth,' provides crucial insight into his motivations and methods. The thesis argues that the art world's authentication processes are fundamentally flawed and that many 'priceless' works in major museums are actually sophisticated forgeries that have been accepted as authentic through institutional bias and financial pressure. More importantly, the thesis specifically mentions 'La Belle Ferronnière' as a painting whose attribution to Leonardo da Vinci has been questioned by several scholars but dismissed by museums unwilling to acknowledge potential errors in their collections. Your investigation reveals that Mercier had been in contact with Vincent Delacroix for over a year, not as co-conspirators in a theft, but as collaborators in an elaborate scheme to expose what they believed to be widespread fraud in the art authentication industry. The plan was audacious: steal the original painting, replace it temporarily with Mercier's forgery, and then reveal the switch to demonstrate how easily even the world's most prestigious museum could be deceived. However, the plan went awry when Dr. Moreau's private research began to uncover inconsistencies in the painting's provenance, threatening to expose their scheme before they could reveal it on their own terms. The anonymous letters were Delacroix's attempt to pressure her into abandoning her investigation, but her persistence forced them to accelerate their timeline.",
     dialogues: [
       {
-        speaker: "Art History Professor",
-        text: "Jean-Baptiste's thesis was controversial but brilliant. He genuinely believed he was exposing corruption in the art world.",
+        character: "Art History Professor",
+        speech:
+          "Jean-Baptiste's thesis was controversial but brilliant. He genuinely believed he was exposing corruption in the art world.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "So this wasn't about money - it was about proving a point. But where is the original painting now?",
+        character: "Detective Dubois",
+        speech: "So this wasn't about money - it was about proving a point. But where is the original painting now?",
       },
       {
-        speaker: "Swiss Bank Official",
-        text: "Monsieur Delacroix deposited a package in our vault yesterday, but he left specific instructions that it not be opened for one week.",
+        character: "Swiss Bank Official",
+        speech:
+          "Monsieur Delacroix deposited a package in our vault yesterday, but he left specific instructions that it not be opened for one week.",
       },
       {
-        speaker: "Detective Dubois",
-        text: "One week... just enough time for the forgery to be discovered and the scandal to break. They wanted to be caught.",
+        character: "Detective Dubois",
+        speech:
+          "One week... just enough time for the forgery to be discovered and the scandal to break. They wanted to be caught.",
       },
       {
-        speaker: "Mercier's Colleague",
-        text: "He kept saying that sometimes you have to break the rules to expose the truth. I thought he was just being philosophical.",
+        character: "Mercier's Colleague",
+        speech:
+          "He kept saying that sometimes you have to break the rules to expose the truth. I thought he was just being philosophical.",
       },
     ],
-    background_audio: "Contemplative music with pages turning and distant city sounds",
-    clues: ["thesis_revelation", "delacroix_package", "planned_exposure"],
+    background_audio: "intellectual",
+    clues: [
+      {
+        clue_id: "thesis_revelation",
+        name: "Thesis Revelation",
+        description:
+          "The revelation that Jean-Baptiste Mercier's art history thesis argued that the art world's authentication processes are fundamentally flawed.",
+      },
+      {
+        clue_id: "delacroix_package",
+        name: "Delacroix Package",
+        description:
+          "The discovery that Vincent Delacroix deposited a package in a Swiss bank vault, with instructions that it not be opened for one week.",
+      },
+      {
+        clue_id: "planned_exposure",
+        name: "Planned Exposure",
+        description:
+          "The realization that Mercier and Delacroix planned to expose what they believed to be widespread fraud in the art authentication industry.",
+      },
+    ],
     options: [
-      { text: "Race to Switzerland to recover the painting", next_scene: "scene_10" },
-      { text: "Confront Dr. Moreau about her research findings", next_scene: "scene_10" },
-      { text: "Examine the forgery more closely for the final clue", next_scene: "scene_10" },
-      { text: "Check if other museums have similar authentication issues", next_scene: "scene_10" },
+      {
+        option_id: "opt_9_1",
+        description: "Race to Switzerland to recover the painting",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "opt_9_2",
+        description: "Confront Dr. Moreau about her research findings",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "opt_9_3",
+        description: "Examine the forgery more closely for the final clue",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "opt_9_4",
+        description: "Check if other museums have similar authentication issues",
+        next_scene: "scene_10",
+      },
     ],
   },
   {
@@ -334,32 +690,67 @@ const mockData: Scene[] = [
       "In the climactic resolution of the case, you stand once again before the empty frame in the Louvre's Renaissance wing, but now with complete understanding of the complex motivations and meticulous planning that led to this moment. The original 'La Belle Ferronnière' has been recovered from the Swiss bank vault, exactly where Delacroix intended it to be found, and Jean-Baptiste Mercier has been arrested at Charles de Gaulle Airport attempting to board a flight to New York where he planned to present his findings at an international art authentication conference. The subtle but critical clue that ultimately solved the case was hidden in plain sight: the mysterious card left at the crime scene contained a watermark visible only under ultraviolet light, revealing the logo of a small art supply shop in Montmartre where Mercier had purchased the materials for his forgery. However, the case's resolution raises profound questions about the nature of authenticity in the art world and the lengths to which passionate individuals will go to expose what they perceive as institutional corruption. Dr. Moreau's research, which inadvertently triggered the accelerated timeline of the theft, has indeed revealed troubling inconsistencies in the painting's provenance that will require years of additional study to resolve. Vincent Delacroix, facing charges of conspiracy and art theft, maintains that his actions were justified by a higher moral purpose, while Mercier's forgery, ironically, demonstrates such remarkable skill that it has sparked new discussions about the relationship between artistic talent and criminal intent. As you file your final report, you reflect on the thin line between preservation and obsession, between protecting cultural heritage and questioning established truths, and wonder whether the art world will learn from this elaborate lesson or simply tighten its security and continue as before.",
     dialogues: [
       {
-        speaker: "Detective Dubois",
-        text: "The painting is safe, but the questions you've raised about authentication will haunt the art world for years to come.",
+        character: "Detective Dubois",
+        speech:
+          "The painting is safe, but the questions you've raised about authentication will haunt the art world for years to come.",
       },
       {
-        speaker: "Jean-Baptiste Mercier",
-        text: "Detective, I never intended to keep the painting. I just wanted people to see how easily they could be deceived.",
+        character: "Jean-Baptiste Mercier",
+        speech:
+          "Detective, I never intended to keep the painting. I just wanted people to see how easily they could be deceived.",
       },
       {
-        speaker: "Vincent Delacroix",
-        text: "The real crime is the complacency of institutions that refuse to question their own assumptions about authenticity.",
+        character: "Vincent Delacroix",
+        speech:
+          "The real crime is the complacency of institutions that refuse to question their own assumptions about authenticity.",
       },
       {
-        speaker: "Dr. Moreau",
-        text: "Perhaps this incident will force us to be more rigorous in our authentication processes. Some good may come from this chaos.",
+        character: "Dr. Moreau",
+        speech:
+          "Perhaps this incident will force us to be more rigorous in our authentication processes. Some good may come from this chaos.",
       },
       {
-        speaker: "Director Beaumont",
-        text: "The Louvre's reputation will recover, but we must learn from this. Security is more than cameras and alarms - it's about understanding human motivation.",
+        character: "Director Beaumont",
+        speech:
+          "The Louvre's reputation will recover, but we must learn from this. Security is more than cameras and alarms - it's about understanding human motivation.",
       },
     ],
-    background_audio: "Triumphant but contemplative music with museum ambiance",
-    clues: ["watermark_clue", "recovered_painting", "moral_questions"],
+    background_audio: "resolution",
+    clues: [
+      {
+        clue_id: "watermark_clue",
+        name: "Watermark Clue",
+        description:
+          "The discovery of a watermark on the mysterious card left at the crime scene, revealing the logo of an art supply shop in Montmartre.",
+      },
+      {
+        clue_id: "recovered_painting",
+        name: "Recovered Painting",
+        description: "The recovery of the original 'La Belle Ferronnière' from the Swiss bank vault.",
+      },
+      {
+        clue_id: "moral_questions",
+        name: "Moral Questions",
+        description:
+          "The profound questions raised about the nature of authenticity in the art world and the lengths to which individuals will go to expose perceived corruption.",
+      },
+    ],
     options: [
-      { text: "Case closed - file the final report", next_scene: "case_solved" },
-      { text: "Recommend changes to museum security protocols", next_scene: "case_solved" },
-      { text: "Suggest further investigation into art authentication", next_scene: "case_solved" },
+      {
+        option_id: "opt_10_1",
+        description: "Case closed - file the final report",
+        next_scene: "case_solved",
+      },
+      {
+        option_id: "opt_10_2",
+        description: "Recommend changes to museum security protocols",
+        next_scene: "case_solved",
+      },
+      {
+        option_id: "opt_10_3",
+        description: "Suggest further investigation into art authentication",
+        next_scene: "case_solved",
+      },
     ],
   },
 ]
@@ -367,7 +758,7 @@ const mockData: Scene[] = [
 export default function ArtTheftParisPage() {
   const router = useRouter()
   const [currentScene, setCurrentScene] = useState("scene_1")
-  const [discoveredClues, setDiscoveredClues] = useState<string[]>([])
+  const [discoveredClues, setDiscoveredClues] = useState<Clue[]>([])
   const [sceneHistory, setSceneHistory] = useState<string[]>(["scene_1"])
 
   const currentSceneData = mockData.find((scene) => scene.scene_id === currentScene)
@@ -375,7 +766,9 @@ export default function ArtTheftParisPage() {
   useEffect(() => {
     if (currentSceneData) {
       setDiscoveredClues((prev) => {
-        const newClues = currentSceneData.clues.filter((clue) => !prev.includes(clue))
+        const newClues = currentSceneData.clues.filter(
+          (clue) => !prev.some((existingClue) => existingClue.clue_id === clue.clue_id),
+        )
         return [...prev, ...newClues]
       })
     }
@@ -478,8 +871,8 @@ export default function ArtTheftParisPage() {
               </div>
               {currentSceneData.dialogues.map((dialogue, index) => (
                 <div key={index} className="dialogue-item">
-                  <div className="character-tag">{dialogue.speaker}</div>
-                  <div className="speech-bubble">"{dialogue.text}"</div>
+                  <div className="character-tag">{dialogue.character}</div>
+                  <div className="speech-bubble">"{dialogue.speech}"</div>
                 </div>
               ))}
             </div>
@@ -494,10 +887,10 @@ export default function ArtTheftParisPage() {
               {currentSceneData.clues.map((clue, index) => (
                 <div key={index} className="clue-item">
                   <div className="clue-header">
-                    <strong className="clue-name">{clue.replace(/_/g, " ").toUpperCase()}</strong>
+                    <strong className="clue-name">{clue.name.toUpperCase()}</strong>
                     <span className="clue-status">VERIFIED</span>
                   </div>
-                  <p className="clue-description">Evidence collected and catalogued</p>
+                  <p className="clue-description">{clue.description}</p>
                 </div>
               ))}
             </div>
@@ -511,7 +904,7 @@ export default function ArtTheftParisPage() {
             <div className="options-grid">
               {currentSceneData.options.map((option, index) => (
                 <button key={index} className="option-btn" onClick={() => handleOptionClick(option.next_scene)}>
-                  <span className="option-text">{option.text}</span>
+                  <span className="option-text">{option.description}</span>
                   <div className="btn-glow"></div>
                 </button>
               ))}
@@ -526,10 +919,10 @@ export default function ArtTheftParisPage() {
               <div className="connection-status">SECURE</div>
             </div>
             <div className="evidence-list">
-              {discoveredClues.map((clueId, index) => (
+              {discoveredClues.map((clue, index) => (
                 <div key={index} className="evidence-item">
                   <div className="evidence-icon">📄</div>
-                  <div className="evidence-name">{clueId.replace(/_/g, " ").toUpperCase()}</div>
+                  <div className="evidence-name">{clue.name.toUpperCase()}</div>
                 </div>
               ))}
             </div>

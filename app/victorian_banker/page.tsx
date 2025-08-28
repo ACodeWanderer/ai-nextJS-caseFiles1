@@ -4,20 +4,27 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 interface Clue {
-  id: string
+  clue_id: string
   name: string
   description: string
 }
 
+interface Dialogue {
+  character: string
+  speech: string
+}
+
 interface Option {
-  text: string
-  nextScene: string
+  option_id: string
+  description: string
+  next_scene: string
+  required_clues?: string[]
 }
 
 interface Scene {
   scene_id: string
   narration: string
-  dialogues: string[]
+  dialogues: Dialogue[]
   background_audio: string
   clues: Clue[]
   options: Option[]
@@ -29,22 +36,46 @@ const mockStoryData: Scene[] = [
     narration:
       "The gaslight flickers against the grimy windows of Threadneedle Street as Inspector Edmund Blackthorne arrives at the scene of what promises to be one of London's most perplexing murders. The fog rolls thick through the narrow Victorian streets, muffling the clip-clop of horse hooves and the distant cry of newspaper vendors announcing the shocking death of prominent banker Reginald Ashworth. Inside the opulent offices of Ashworth & Associates, the mahogany-paneled walls seem to whisper secrets of financial dealings and hidden grudges. The victim lies slumped over his leather-bound ledger, a crystal paperweight stained with blood beside his head, while the scent of expensive tobacco and fear hangs heavy in the air. As Blackthorne surveys the scene, he knows that in the labyrinthine world of Victorian banking, where fortunes are made and lost on a handshake, every suspect harbors secrets that could provide motive for murder. The inspector's keen eyes take in every detail, from the scattered papers on the Persian rug to the half-empty brandy decanter, understanding that in this world of propriety and hidden vice, appearances can be fatally deceiving.",
     dialogues: [
-      "Inspector Blackthorne: 'Another tragedy in the heart of London's financial district. The fog may obscure the streets, but it won't hide the truth.'",
-      "Constable Williams: 'The body was discovered this morning by his secretary, Miss Charlotte Pemberton. She's quite shaken, sir.'",
-      "Inspector Blackthorne: 'Indeed. In my experience, those closest to the victim often hold the keys to understanding their demise.'",
+      {
+        character: "Inspector Blackthorne",
+        speech:
+          "Another tragedy in the heart of London's financial district. The fog may obscure the streets, but it won't hide the truth.",
+      },
+      {
+        character: "Constable Williams",
+        speech:
+          "The body was discovered this morning by his secretary, Miss Charlotte Pemberton. She's quite shaken, sir.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech:
+          "Indeed. In my experience, those closest to the victim often hold the keys to understanding their demise.",
+      },
     ],
     background_audio: "Victorian street ambiance with horse carriages",
     clues: [
       {
-        id: "crime_scene",
+        clue_id: "crime_scene",
         name: "Crime Scene Layout",
         description: "Reginald Ashworth found dead at his desk, crystal paperweight nearby with blood",
       },
     ],
     options: [
-      { text: "Examine the victim's desk more closely", nextScene: "scene_2" },
-      { text: "Interview the secretary who found the body", nextScene: "scene_3" },
-      { text: "Inspect the office for signs of struggle", nextScene: "scene_4" },
+      {
+        option_id: "examine_desk",
+        description: "Examine the victim's desk more closely",
+        next_scene: "scene_2",
+      },
+      {
+        option_id: "interview_secretary",
+        description: "Interview the secretary who found the body",
+        next_scene: "scene_3",
+      },
+      {
+        option_id: "inspect_office",
+        description: "Inspect the office for signs of struggle",
+        next_scene: "scene_4",
+      },
     ],
   },
   {
@@ -52,32 +83,54 @@ const mockStoryData: Scene[] = [
     narration:
       "Inspector Blackthorne approaches the imposing mahogany desk where Reginald Ashworth met his untimely end, the gaslight casting dancing shadows across the leather-bound ledgers and scattered correspondence. The banker's final moments are frozen in time - his fountain pen still clutched in his right hand, ink blotting the page where he had been writing what appears to be a letter of significant importance. Among the papers, Blackthorne discovers a half-written note that begins 'My dearest Margaret, I fear I have made a terrible mistake...' before trailing off in an illegible scrawl. The crystal paperweight, now evidence of the fatal blow, bears the engraved initials 'R.A.' and shows traces of what appears to be hair and blood on its sharp corner. Most intriguingly, the inspector notices that the victim's gold pocket watch has stopped at precisely 9:47, though whether this indicates the time of death or merely coincidence remains to be determined. The desk drawers, when examined, reveal a locked compartment that seems to have been recently tampered with, its brass lock showing fresh scratches that suggest someone was desperately searching for something of great value.",
     dialogues: [
-      "Inspector Blackthorne: 'Curious. This letter to Margaret - presumably his wife - suggests he was troubled by something significant.'",
-      "Constable Williams: 'The paperweight appears to be the murder weapon, sir. Quite a brutal way to end a man's life.'",
-      "Inspector Blackthorne: 'Indeed, but notice the positioning. Was this a crime of passion, or something more calculated?'",
+      {
+        character: "Inspector Blackthorne",
+        speech:
+          "Curious. This letter to Margaret - presumably his wife - suggests he was troubled by something significant.",
+      },
+      {
+        character: "Constable Williams",
+        speech: "The paperweight appears to be the murder weapon, sir. Quite a brutal way to end a man's life.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "Indeed, but notice the positioning. Was this a crime of passion, or something more calculated?",
+      },
     ],
     background_audio: "Ticking clock and rustling papers",
     clues: [
       {
-        id: "unfinished_letter",
+        clue_id: "unfinished_letter",
         name: "Unfinished Letter",
         description: "Half-written letter to Margaret mentioning a 'terrible mistake'",
       },
       {
-        id: "stopped_watch",
+        clue_id: "stopped_watch",
         name: "Stopped Pocket Watch",
         description: "Victim's gold watch stopped at 9:47",
       },
       {
-        id: "tampered_lock",
+        clue_id: "tampered_lock",
         name: "Tampered Desk Lock",
         description: "Fresh scratches on locked drawer suggest recent break-in attempt",
       },
     ],
     options: [
-      { text: "Try to open the locked drawer", nextScene: "scene_5" },
-      { text: "Examine the unfinished letter more closely", nextScene: "scene_6" },
-      { text: "Question the wife Margaret about the letter", nextScene: "scene_7" },
+      {
+        option_id: "open_drawer",
+        description: "Try to open the locked drawer",
+        next_scene: "scene_5",
+      },
+      {
+        option_id: "examine_letter",
+        description: "Examine the unfinished letter more closely",
+        next_scene: "scene_6",
+      },
+      {
+        option_id: "question_wife",
+        description: "Question the wife Margaret about the letter",
+        next_scene: "scene_7",
+      },
     ],
   },
   {
@@ -85,33 +138,58 @@ const mockStoryData: Scene[] = [
     narration:
       "Miss Charlotte Pemberton sits in the waiting area outside the banker's office, her usually pristine appearance disheveled and her hands trembling as she clutches a lace handkerchief stained with tears. The young secretary, no more than twenty-five years of age, possesses the kind of refined beauty that would not go unnoticed in the male-dominated world of Victorian banking, her auburn hair partially escaped from its pins and her green eyes red-rimmed from crying. As Inspector Blackthorne approaches, he notes the way she flinches at his presence, her nervous energy suggesting either genuine grief or carefully concealed guilt. Her black mourning dress, hastily donned, bears a small tear at the sleeve that she attempts to hide, and the inspector observes that her usually immaculate penmanship, evident in the appointment book beside her, has become shaky and erratic in today's entries. When she speaks, her voice carries the educated accent of someone who has risen above her station through intelligence and determination, yet there's an underlying tension that suggests she harbors secrets about her relationship with the deceased banker. The way she avoids direct eye contact while recounting the discovery of the body raises questions about whether Miss Pemberton's role in Ashworth's life extended beyond mere professional duties.",
     dialogues: [
-      "Miss Pemberton: 'I... I arrived at my usual time, eight o'clock sharp. Mr. Ashworth was always here before me, but when I knocked, there was no answer.'",
-      "Inspector Blackthorne: 'And what did you do then, Miss Pemberton?'",
-      "Miss Pemberton: 'I used my key to enter. That's when I found him... oh, it was horrible! There was so much blood!'",
-      "Inspector Blackthorne: 'You seem quite distressed. Was your relationship with Mr. Ashworth purely professional?'",
+      {
+        character: "Miss Pemberton",
+        speech:
+          "I... I arrived at my usual time, eight o'clock sharp. Mr. Ashworth was always here before me, but when I knocked, there was no answer.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "And what did you do then, Miss Pemberton?",
+      },
+      {
+        character: "Miss Pemberton",
+        speech: "I used my key to enter. That's when I found him... oh, it was horrible! There was so much blood!",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "You seem quite distressed. Was your relationship with Mr. Ashworth purely professional?",
+      },
     ],
     background_audio: "Soft sobbing and distant street sounds",
     clues: [
       {
-        id: "secretary_key",
+        clue_id: "secretary_key",
         name: "Secretary's Key",
         description: "Charlotte had a key to Ashworth's private office",
       },
       {
-        id: "torn_dress",
+        clue_id: "torn_dress",
         name: "Torn Sleeve",
         description: "Charlotte's dress has a fresh tear she tries to hide",
       },
       {
-        id: "nervous_behavior",
+        clue_id: "nervous_behavior",
         name: "Nervous Demeanor",
         description: "Charlotte shows signs of extreme anxiety beyond normal grief",
       },
     ],
     options: [
-      { text: "Press her about the nature of her relationship with Ashworth", nextScene: "scene_8" },
-      { text: "Ask about her whereabouts last evening", nextScene: "scene_9" },
-      { text: "Inquire about any recent changes in Ashworth's behavior", nextScene: "scene_10" },
+      {
+        option_id: "press_relationship",
+        description: "Press her about the nature of her relationship with Ashworth",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "ask_whereabouts",
+        description: "Ask about her whereabouts last evening",
+        next_scene: "scene_9",
+      },
+      {
+        option_id: "inquire_behavior",
+        description: "Inquire about any recent changes in Ashworth's behavior",
+        next_scene: "scene_10",
+      },
     ],
   },
   {
@@ -119,38 +197,62 @@ const mockStoryData: Scene[] = [
     narration:
       "The inspector's trained eye sweeps across the opulent office, searching for signs of the violent struggle that must have preceded Reginald Ashworth's death, yet the scene presents a puzzling contradiction to expectations of a brutal murder. The Persian rug beneath the desk shows no signs of being disturbed, its intricate patterns lying flat and undisturbed except for a few scattered papers that appear to have fallen from the desk during the fatal blow. The heavy velvet curtains hang perfectly straight, their gold tassels untouched, while the collection of leather-bound books on the mahogany shelves remain in perfect order, suggesting that if there was a confrontation, it was brief and decisive. However, upon closer inspection, Blackthorne notices something peculiar: a single crystal glass lies shattered near the fireplace, its fragments catching the gaslight like tiny diamonds scattered across the dark wood floor. The fireplace itself contains the cold ashes of what appears to have been recently burned papers, their charred edges still visible among the soot, indicating that someone took great care to destroy evidence before or after the murder. Most intriguingly, the office door shows no signs of forced entry, and the window remains securely latched from the inside, suggesting that the killer was either someone Ashworth trusted enough to admit willingly, or someone who possessed their own means of access to this inner sanctum of London's financial elite.",
     dialogues: [
-      "Inspector Blackthorne: 'Curious. For such a violent crime, there are remarkably few signs of struggle.'",
-      "Constable Williams: 'Perhaps the victim was taken by surprise, sir?'",
-      "Inspector Blackthorne: 'Possibly, but notice the burned papers in the fireplace. Someone was destroying evidence.'",
-      "Constable Williams: 'Should we examine the ashes, Inspector?'",
+      {
+        character: "Inspector Blackthorne",
+        speech: "Curious. For such a violent crime, there are remarkably few signs of struggle.",
+      },
+      {
+        character: "Constable Williams",
+        speech: "Perhaps the victim was taken by surprise, sir?",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "Possibly, but notice the burned papers in the fireplace. Someone was destroying evidence.",
+      },
+      {
+        character: "Constable Williams",
+        speech: "Should we examine the ashes, Inspector?",
+      },
     ],
     background_audio: "Crackling fireplace and wind through windows",
     clues: [
       {
-        id: "no_struggle",
+        clue_id: "no_struggle",
         name: "Lack of Struggle Signs",
         description: "Office shows minimal disturbance despite violent death",
       },
       {
-        id: "shattered_glass",
+        clue_id: "shattered_glass",
         name: "Broken Crystal Glass",
         description: "Single glass shattered near fireplace",
       },
       {
-        id: "burned_papers",
+        clue_id: "burned_papers",
         name: "Destroyed Documents",
         description: "Recently burned papers in fireplace suggest evidence destruction",
       },
       {
-        id: "no_forced_entry",
+        clue_id: "no_forced_entry",
         name: "Secure Entry Points",
         description: "No signs of forced entry - killer had access or was admitted",
       },
     ],
     options: [
-      { text: "Examine the ashes in the fireplace", nextScene: "scene_5" },
-      { text: "Investigate who else had keys to the office", nextScene: "scene_6" },
-      { text: "Look for the source of the shattered glass", nextScene: "scene_7" },
+      {
+        option_id: "examine_ashes",
+        description: "Examine the ashes in the fireplace",
+        next_scene: "scene_5",
+      },
+      {
+        option_id: "investigate_keys",
+        description: "Investigate who else had keys to the office",
+        next_scene: "scene_6",
+      },
+      {
+        option_id: "look_glass",
+        description: "Look for the source of the shattered glass",
+        next_scene: "scene_7",
+      },
     ],
   },
   {
@@ -158,33 +260,57 @@ const mockStoryData: Scene[] = [
     narration:
       "With careful precision, Inspector Blackthorne kneels beside the cold fireplace, using his magnifying glass to examine the charred remains of what were once important documents, the acrid smell of burned paper still lingering in the air like the ghost of secrets destroyed. Among the ashes, he manages to salvage several partially legible fragments that reveal tantalizing glimpses of financial transactions, including what appears to be a large withdrawal dated just three days prior to the murder. The most significant discovery comes in the form of a partially burned letterhead bearing the name 'Whitmore & Associates' - the banking firm of Ashworth's primary business rival, Harold Whitmore, suggesting that the victim had been conducting clandestine negotiations or perhaps uncovering evidence of financial impropriety. As Blackthorne carefully pieces together the fragments, a pattern emerges of what appears to be embezzlement or fraud, with amounts that would have been substantial enough to ruin reputations and destroy careers in Victorian London's tight-knit financial community. The inspector also discovers the remnants of what appears to be a personal letter, with only the words 'my beloved Charlotte' and 'our secret must never' remaining legible, adding another layer of complexity to the web of relationships surrounding the deceased banker. The methodical destruction of these documents suggests that the killer was not only familiar with Ashworth's business dealings but also desperate to prevent certain information from coming to light, indicating a level of premeditation that transforms this from a crime of passion into something far more calculated and sinister.",
     dialogues: [
-      "Inspector Blackthorne: 'These ashes tell quite a story. Someone was very thorough in destroying evidence.'",
-      "Constable Williams: 'What can you make out, sir?'",
-      "Inspector Blackthorne: 'Financial documents, correspondence with Whitmore & Associates, and... something about Charlotte.'",
-      "Constable Williams: 'The secretary? This grows more intriguing by the moment.'",
+      {
+        character: "Inspector Blackthorne",
+        speech: "These ashes tell quite a story. Someone was very thorough in destroying evidence.",
+      },
+      {
+        character: "Constable Williams",
+        speech: "What can you make out, sir?",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "Financial documents, correspondence with Whitmore & Associates, and... something about Charlotte.",
+      },
+      {
+        character: "Constable Williams",
+        speech: "The secretary? This grows more intriguing by the moment.",
+      },
     ],
     background_audio: "Rustling papers and distant church bells",
     clues: [
       {
-        id: "financial_fraud",
+        clue_id: "financial_fraud",
         name: "Evidence of Embezzlement",
         description: "Burned documents suggest financial impropriety involving large sums",
       },
       {
-        id: "whitmore_connection",
+        clue_id: "whitmore_connection",
         name: "Rival Bank Correspondence",
         description: "Letters between Ashworth and his business rival Harold Whitmore",
       },
       {
-        id: "charlotte_letter",
+        clue_id: "charlotte_letter",
         name: "Personal Letter Fragment",
         description: "Burned letter mentioning 'beloved Charlotte' and 'our secret'",
       },
     ],
     options: [
-      { text: "Confront Charlotte about the personal letter", nextScene: "scene_8" },
-      { text: "Visit Harold Whitmore to discuss the business correspondence", nextScene: "scene_9" },
-      { text: "Investigate the large financial withdrawal", nextScene: "scene_10" },
+      {
+        option_id: "confront_charlotte",
+        description: "Confront Charlotte about the personal letter",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "visit_whitmore",
+        description: "Visit Harold Whitmore to discuss the business correspondence",
+        next_scene: "scene_9",
+      },
+      {
+        option_id: "investigate_withdrawal",
+        description: "Investigate the large financial withdrawal",
+        next_scene: "scene_10",
+      },
     ],
   },
   {
@@ -192,38 +318,62 @@ const mockStoryData: Scene[] = [
     narration:
       "Inspector Blackthorne carefully unfolds the unfinished letter, its expensive paper bearing the watermark of London's finest stationers, while the elegant script reveals the tormented thoughts of a man wrestling with his conscience in his final hours. The letter, addressed to 'My Dearest Margaret,' continues beyond the initial line to reveal Ashworth's growing awareness of a conspiracy that threatened to destroy not only his reputation but potentially his life: 'I have discovered that someone close to me has been systematically embezzling funds from our clients' accounts, using forged documents that bear my signature.' The banker's handwriting becomes increasingly erratic as the letter progresses, suggesting either great emotional distress or perhaps the effects of some substance that impaired his motor functions. Most damning is the revelation that follows: 'I confronted this person tonight, and I fear I may have made a grave error in judgment - they know that I know, and I suspect they will stop at nothing to protect themselves.' The letter breaks off abruptly with what appears to be the beginning of a name: 'It was Ch—' before the pen trails off in a long, wavering line across the page. The inspector notes that the ink is still slightly wet, suggesting that Ashworth was writing this confession when he was attacked, and the abrupt ending indicates that his killer struck while he was in the very act of exposing their identity. This letter transforms the investigation from a simple murder case into a complex web of financial crime, betrayal, and desperate self-preservation that reaches into the highest echelons of London's banking establishment.",
     dialogues: [
-      "Inspector Blackthorne: 'This letter changes everything. Ashworth knew his killer and was trying to expose them.'",
-      "Constable Williams: 'The name begins with 'Ch' - that could be Charlotte, the secretary.'",
-      "Inspector Blackthorne: 'Or it could be Charles, Christopher, or any number of names. We mustn't jump to conclusions.'",
-      "Constable Williams: 'But the timing, sir - he was writing when attacked. The killer had to stop him from finishing.'",
+      {
+        character: "Inspector Blackthorne",
+        speech: "This letter changes everything. Ashworth knew his killer and was trying to expose them.",
+      },
+      {
+        character: "Constable Williams",
+        speech: "The name begins with 'Ch' - that could be Charlotte, the secretary.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "Or it could be Charles, Christopher, or any number of names. We mustn't jump to conclusions.",
+      },
+      {
+        character: "Constable Williams",
+        speech: "But the timing, sir - he was writing when attacked. The killer had to stop him from finishing.",
+      },
     ],
     background_audio: "Scratching pen and ticking clock",
     clues: [
       {
-        id: "embezzlement_confession",
+        clue_id: "embezzlement_confession",
         name: "Ashworth's Confession",
         description: "Letter reveals systematic embezzlement by someone close to him",
       },
       {
-        id: "forged_signatures",
+        clue_id: "forged_signatures",
         name: "Document Forgery",
         description: "Mention of forged documents bearing Ashworth's signature",
       },
       {
-        id: "partial_name",
+        clue_id: "partial_name",
         name: "Incomplete Name",
         description: "Letter breaks off while writing a name beginning with 'Ch—'",
       },
       {
-        id: "wet_ink",
+        clue_id: "wet_ink",
         name: "Fresh Writing",
         description: "Ink still wet, indicating Ashworth was writing when attacked",
       },
     ],
     options: [
-      { text: "Examine the bank's financial records for forgeries", nextScene: "scene_7" },
-      { text: "Question all associates whose names begin with 'Ch'", nextScene: "scene_8" },
-      { text: "Search for the original documents that were forged", nextScene: "scene_9" },
+      {
+        option_id: "examine_records",
+        description: "Examine the bank's financial records for forgeries",
+        next_scene: "scene_7",
+      },
+      {
+        option_id: "question_associates",
+        description: "Question all associates whose names begin with 'Ch'",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "search_documents",
+        description: "Search for the original documents that were forged",
+        next_scene: "scene_9",
+      },
     ],
   },
   {
@@ -231,39 +381,70 @@ const mockStoryData: Scene[] = [
     narration:
       "Margaret Ashworth receives Inspector Blackthorne in the drawing room of the family's Belgravia mansion, her composed demeanor and elegant black mourning dress unable to completely mask the calculating intelligence that flickers behind her pale blue eyes. The widow, a woman of perhaps forty years with prematurely silver hair arranged in the latest fashion, maintains the perfect picture of Victorian propriety even as she discusses her husband's violent death with an emotional detachment that strikes the inspector as either remarkable self-control or suspicious indifference. As she pours tea from an exquisite china service, her hands remain perfectly steady, and her voice carries no trace of the grief one might expect from a woman who has just lost her husband of fifteen years to brutal murder. When Blackthorne mentions the unfinished letter, a barely perceptible tightening around her eyes suggests recognition, though she claims no knowledge of any 'terrible mistake' her husband might have made. The drawing room itself tells a story of wealth and refinement, with its silk wallpaper, crystal chandeliers, and collection of valuable paintings, yet the inspector notices that several spaces on the walls show the faint outlines where paintings once hung, suggesting recent financial pressures despite the family's apparent prosperity. Most intriguingly, when asked about her whereabouts the previous evening, Margaret's alibi involves a ladies' charitable meeting that ended at precisely 9:30 - just seventeen minutes before her husband's pocket watch stopped, providing her with either perfect timing for innocence or a carefully constructed cover for murder.",
     dialogues: [
-      "Margaret Ashworth: 'Inspector, I'm afraid I cannot imagine what terrible mistake Reginald might have been referring to in his letter.'",
-      "Inspector Blackthorne: 'Mrs. Ashworth, your husband seemed quite distressed about something. Had you noticed any changes in his behavior recently?'",
-      "Margaret Ashworth: 'Reginald had been working longer hours lately, but I attributed that to the pressures of business. He rarely discussed such matters with me.'",
-      "Inspector Blackthorne: 'And your whereabouts last evening?'",
-      "Margaret Ashworth: 'I attended the Ladies' Charitable Society meeting until half past nine, then returned home directly. I have witnesses to verify this.'",
+      {
+        character: "Margaret Ashworth",
+        speech:
+          "Inspector, I'm afraid I cannot imagine what terrible mistake Reginald might have been referring to in his letter.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech:
+          "Mrs. Ashworth, your husband seemed quite distressed about something. Had you noticed any changes in his behavior recently?",
+      },
+      {
+        character: "Margaret Ashworth",
+        speech:
+          "Reginald had been working longer hours lately, but I attributed that to the pressures of business. He rarely discussed such matters with me.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "And your whereabouts last evening?",
+      },
+      {
+        character: "Margaret Ashworth",
+        speech:
+          "I attended the Ladies' Charitable Society meeting until half past nine, then returned home directly. I have witnesses to verify this.",
+      },
     ],
     background_audio: "Elegant piano music and ticking grandfather clock",
     clues: [
       {
-        id: "margaret_alibi",
+        clue_id: "margaret_alibi",
         name: "Margaret's Alibi",
         description: "Claims to be at charity meeting until 9:30, just before estimated time of death",
       },
       {
-        id: "missing_paintings",
+        clue_id: "missing_paintings",
         name: "Sold Artwork",
         description: "Faint outlines on walls suggest valuable paintings were recently removed",
       },
       {
-        id: "emotional_detachment",
+        clue_id: "emotional_detachment",
         name: "Unusual Composure",
         description: "Margaret shows remarkable lack of grief for a recent widow",
       },
       {
-        id: "financial_pressure",
+        clue_id: "financial_pressure",
         name: "Hidden Money Problems",
         description: "Despite appearances, family may be facing financial difficulties",
       },
     ],
     options: [
-      { text: "Verify Margaret's alibi with the charitable society", nextScene: "scene_10" },
-      { text: "Investigate the family's financial situation", nextScene: "scene_8" },
-      { text: "Question Margaret about the missing paintings", nextScene: "scene_9" },
+      {
+        option_id: "verify_alibi",
+        description: "Verify Margaret's alibi with the charitable society",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "investigate_finances",
+        description: "Investigate the family's financial situation",
+        next_scene: "scene_8",
+      },
+      {
+        option_id: "question_paintings",
+        description: "Question Margaret about the missing paintings",
+        next_scene: "scene_9",
+      },
     ],
   },
   {
@@ -271,40 +452,72 @@ const mockStoryData: Scene[] = [
     narration:
       "The confrontation with Charlotte Pemberton takes place in the bank's small conference room, where the young secretary's carefully maintained composure finally begins to crack under the weight of Inspector Blackthorne's persistent questioning and the mounting evidence of her intimate involvement with the deceased banker. Her auburn hair, now completely disheveled, frames a face that alternates between defiant anger and desperate fear as she realizes that her secrets are being systematically exposed by the inspector's methodical investigation. When presented with the fragment of the burned letter mentioning 'beloved Charlotte,' her green eyes fill with tears that she angrily wipes away, her voice trembling as she finally admits to a romantic relationship with Ashworth that had been carefully hidden from London society for over two years. The revelation that she had been embezzling funds to support her ailing mother and younger siblings comes tumbling out in a torrent of confession, her educated accent cracking to reveal the working-class origins she had worked so hard to conceal. She explains how Ashworth had discovered her theft just days before his death, and how she had begged him not to expose her, promising to repay every penny if he would give her time. However, her story takes a darker turn when she reveals that Ashworth had threatened to not only expose her embezzlement but also to end their relationship and dismiss her from her position, leaving her with no means to support her family and facing certain imprisonment. The inspector notes that her account of events places her in Ashworth's office at approximately 9:45 the previous evening, just minutes before the estimated time of death, and her desperate circumstances provide a compelling motive for murder.",
     dialogues: [
-      "Charlotte Pemberton: 'Yes, I loved him! And yes, I took the money, but I never meant for anyone to get hurt!'",
-      "Inspector Blackthorne: 'Miss Pemberton, you were in his office last evening. What exactly transpired between you?'",
-      "Charlotte Pemberton: 'He said he couldn't protect me anymore. That his reputation was more important than... than what we had together.'",
-      "Inspector Blackthorne: 'And how did you respond to this rejection?'",
-      "Charlotte Pemberton: 'I begged him to reconsider. I told him I would do anything to make it right, but he had already made up his mind.'",
-      "Inspector Blackthorne: 'The crystal paperweight, Miss Pemberton. Did you strike him with it?'",
+      {
+        character: "Charlotte Pemberton",
+        speech: "Yes, I loved him! And yes, I took the money, but I never meant for anyone to get hurt!",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "Miss Pemberton, you were in his office last evening. What exactly transpired between you?",
+      },
+      {
+        character: "Charlotte Pemberton",
+        speech:
+          "He said he couldn't protect me anymore. That his reputation was more important than... than what we had together.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "And how did you respond to this rejection?",
+      },
+      {
+        character: "Charlotte Pemberton",
+        speech:
+          "I begged him to reconsider. I told him I would do anything to make it right, but he had already made up his mind.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "The crystal paperweight, Miss Pemberton. Did you strike him with it?",
+      },
     ],
     background_audio: "Sobbing and distant street noise",
     clues: [
       {
-        id: "charlotte_confession",
+        clue_id: "charlotte_confession",
         name: "Charlotte's Confession",
         description: "Admits to embezzlement and romantic relationship with Ashworth",
       },
       {
-        id: "motive_established",
+        clue_id: "motive_established",
         name: "Clear Motive",
         description: "Faced exposure, imprisonment, and loss of income for family",
       },
       {
-        id: "timeline_match",
+        clue_id: "timeline_match",
         name: "Presence at Scene",
         description: "Charlotte was in office at 9:45, minutes before estimated death",
       },
       {
-        id: "desperate_circumstances",
+        clue_id: "desperate_circumstances",
         name: "Family Obligations",
         description: "Supporting sick mother and siblings through embezzled funds",
       },
     ],
     options: [
-      { text: "Arrest Charlotte for murder", nextScene: "scene_10" },
-      { text: "Continue investigating other suspects", nextScene: "scene_9" },
-      { text: "Examine the evidence more carefully before deciding", nextScene: "scene_10" },
+      {
+        option_id: "arrest_charlotte",
+        description: "Arrest Charlotte for murder",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "continue_investigating",
+        description: "Continue investigating other suspects",
+        next_scene: "scene_9",
+      },
+      {
+        option_id: "examine_evidence",
+        description: "Examine the evidence more carefully before deciding",
+        next_scene: "scene_10",
+      },
     ],
   },
   {
@@ -312,41 +525,78 @@ const mockStoryData: Scene[] = [
     narration:
       "Harold Whitmore, Ashworth's primary business rival, receives Inspector Blackthorne in his equally opulent but distinctly different office, where the atmosphere crackles with barely concealed hostility and the tension of two alpha males circling each other in the dangerous world of Victorian finance. Whitmore, a man in his fifties with steel-gray hair and the bearing of someone accustomed to wielding considerable power, makes no attempt to hide his satisfaction at his competitor's demise, his cold smile and calculating eyes suggesting a man capable of ruthless action when his interests are threatened. The inspector notes that Whitmore's office contains several maps of London marked with potential bank locations, and correspondence scattered across his desk reveals an aggressive expansion plan that would have been significantly hampered by Ashworth's continued presence in the market. When questioned about the burned correspondence found in Ashworth's fireplace, Whitmore's demeanor shifts from smugness to wariness, and he admits to having met with Ashworth three days prior to discuss what he terms 'a mutually beneficial arrangement' that would have eliminated their competition. However, his version of events takes a sinister turn when he reveals that Ashworth had been investigating irregularities in several joint ventures between their firms, and had threatened to expose what he called 'creative accounting practices' that could have destroyed Whitmore's reputation and business empire. The most damaging revelation comes when Whitmore, in an attempt to deflect suspicion, mentions that he had seen Charlotte Pemberton leaving Ashworth's building at nearly ten o'clock the previous evening, her appearance disheveled and her manner suggesting extreme distress. This testimony not only provides an independent witness to Charlotte's presence at the scene but also establishes a timeline that places her there at the crucial moment when the murder occurred.",
     dialogues: [
-      "Harold Whitmore: 'Inspector, I won't pretend to mourn Reginald's passing. He was a formidable competitor, but business is business.'",
-      "Inspector Blackthorne: 'Mr. Whitmore, we found correspondence between you and the victim. What was the nature of your recent discussions?'",
-      "Harold Whitmore: 'We were exploring a merger possibility. Ashworth was... concerned about certain financial practices in our joint ventures.'",
-      "Inspector Blackthorne: 'Concerned enough to threaten exposure?'",
-      "Harold Whitmore: 'Perhaps. But I had nothing to fear from his investigations. My books are clean, Inspector.'",
-      "Inspector Blackthorne: 'And your whereabouts yesterday evening?'",
-      "Harold Whitmore: 'At my club until well past midnight. But I did see that secretary of his - Charlotte - leaving his building around ten. She looked quite upset.'",
+      {
+        character: "Harold Whitmore",
+        speech:
+          "Inspector, I won't pretend to mourn Reginald's passing. He was a formidable competitor, but business is business.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech:
+          "Mr. Whitmore, we found correspondence between you and the victim. What was the nature of your recent discussions?",
+      },
+      {
+        character: "Harold Whitmore",
+        speech:
+          "We were exploring a merger possibility. Ashworth was... concerned about certain financial practices in our joint ventures.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "Concerned enough to threaten exposure?",
+      },
+      {
+        character: "Harold Whitmore",
+        speech: "Perhaps. But I had nothing to fear from his investigations. My books are clean, Inspector.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech: "And your whereabouts yesterday evening?",
+      },
+      {
+        character: "Harold Whitmore",
+        speech:
+          "At my club until well past midnight. But I did see that secretary of his - Charlotte - leaving his building around ten. She looked quite upset.",
+      },
     ],
     background_audio: "Busy office sounds and street traffic",
     clues: [
       {
-        id: "whitmore_motive",
+        clue_id: "whitmore_motive",
         name: "Business Rivalry",
         description: "Whitmore stood to benefit significantly from Ashworth's death",
       },
       {
-        id: "financial_investigation",
+        clue_id: "financial_investigation",
         name: "Threatened Exposure",
         description: "Ashworth was investigating Whitmore's questionable business practices",
       },
       {
-        id: "charlotte_witness",
+        clue_id: "charlotte_witness",
         name: "Independent Witness",
         description: "Whitmore saw Charlotte leaving the building around 10 PM, appearing distressed",
       },
       {
-        id: "club_alibi",
+        clue_id: "club_alibi",
         name: "Whitmore's Alibi",
         description: "Claims to have been at his gentleman's club until after midnight",
       },
     ],
     options: [
-      { text: "Verify Whitmore's alibi at his gentleman's club", nextScene: "scene_10" },
-      { text: "Confront Charlotte with Whitmore's testimony", nextScene: "scene_10" },
-      { text: "Investigate the joint venture irregularities", nextScene: "scene_10" },
+      {
+        option_id: "verify_whitmore_alibi",
+        description: "Verify Whitmore's alibi at his gentleman's club",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "confront_charlotte_whitmore",
+        description: "Confront Charlotte with Whitmore's testimony",
+        next_scene: "scene_10",
+      },
+      {
+        option_id: "investigate_ventures",
+        description: "Investigate the joint venture irregularities",
+        next_scene: "scene_10",
+      },
     ],
   },
   {
@@ -354,35 +604,69 @@ const mockStoryData: Scene[] = [
     narration:
       "In the final scene of this Victorian mystery, Inspector Blackthorne gathers all the suspects in Ashworth's office, where the gaslight casts long shadows across the scene of the crime as he methodically pieces together the complex web of deceit, passion, and desperation that led to the banker's violent death. The evidence, when viewed in its entirety, paints a clear picture of Charlotte Pemberton as the killer, driven to murder by a combination of romantic betrayal, financial desperation, and the imminent threat of exposure and imprisonment. Her presence in the office at the crucial time, confirmed by both her own confession and Harold Whitmore's independent testimony, combined with her clear motive and access to the murder weapon, creates an overwhelming case against the young secretary. However, the inspector's final revelation adds a tragic dimension to the crime when he explains how Charlotte's actions were not those of a cold-blooded killer but rather a desperate woman trapped by circumstances beyond her control, who struck out in a moment of panic when Ashworth threatened to destroy not only her life but the lives of her dependent family members. The crystal paperweight, bearing Ashworth's own initials, becomes a symbol of the irony that the banker was killed by the very symbol of his success, wielded by someone he had trusted and loved but ultimately betrayed. As Charlotte is led away in shackles, her composure finally completely shattered, the inspector reflects on the tragic waste of two lives - one ended by violence, the other destroyed by the consequences of a desperate act born from love, fear, and the crushing weight of Victorian society's unforgiving moral code. The case closes with the understanding that while justice has been served, the true tragedy lies in how the rigid social structures and economic pressures of the era created the conditions that made such a desperate act seem like the only solution to an impossible situation.",
     dialogues: [
-      "Inspector Blackthorne: 'Ladies and gentlemen, the evidence points clearly to one conclusion. Miss Pemberton, you killed Reginald Ashworth.'",
-      "Charlotte Pemberton: 'I... I didn't mean for it to happen. He was going to destroy everything - my family would have starved!'",
-      "Margaret Ashworth: 'You were stealing from us, from our clients! How dare you claim victimhood!'",
-      "Harold Whitmore: 'A sordid affair indeed. The banking industry is better off without such scandal.'",
-      "Inspector Blackthorne: 'Miss Pemberton, you struck him with the paperweight when he threatened to expose you. The timing, the evidence, your own confession - it all points to your guilt.'",
-      "Charlotte Pemberton: 'God forgive me, I never wanted anyone to die. I just wanted him to understand, to give me another chance.'",
+      {
+        character: "Inspector Blackthorne",
+        speech:
+          "Ladies and gentlemen, the evidence points clearly to one conclusion. Miss Pemberton, you killed Reginald Ashworth.",
+      },
+      {
+        character: "Charlotte Pemberton",
+        speech:
+          "I... I didn't mean for it to happen. He was going to destroy everything - my family would have starved!",
+      },
+      {
+        character: "Margaret Ashworth",
+        speech: "You were stealing from us, from our clients! How dare you claim victimhood!",
+      },
+      {
+        character: "Harold Whitmore",
+        speech: "A sordid affair indeed. The banking industry is better off without such scandal.",
+      },
+      {
+        character: "Inspector Blackthorne",
+        speech:
+          "Miss Pemberton, you struck him with the paperweight when he threatened to expose you. The timing, the evidence, your own confession - it all points to your guilt.",
+      },
+      {
+        character: "Charlotte Pemberton",
+        speech:
+          "God forgive me, I never wanted anyone to die. I just wanted him to understand, to give me another chance.",
+      },
     ],
     background_audio: "Solemn church bells and rain against windows",
     clues: [
       {
-        id: "final_evidence",
+        clue_id: "final_evidence",
         name: "Conclusive Proof",
         description: "All evidence points to Charlotte as the killer",
       },
       {
-        id: "tragic_motive",
+        clue_id: "tragic_motive",
         name: "Desperate Circumstances",
         description: "Charlotte killed to protect her family from destitution",
       },
       {
-        id: "case_closed",
+        clue_id: "case_closed",
         name: "Justice Served",
         description: "The murder of Reginald Ashworth has been solved",
       },
     ],
     options: [
-      { text: "Arrest Charlotte and close the case", nextScene: "ending_justice" },
-      { text: "Reflect on the tragic circumstances", nextScene: "ending_tragedy" },
-      { text: "Consider the broader implications", nextScene: "ending_society" },
+      {
+        option_id: "arrest_close",
+        description: "Arrest Charlotte and close the case",
+        next_scene: "ending_justice",
+      },
+      {
+        option_id: "reflect_circumstances",
+        description: "Reflect on the tragic circumstances",
+        next_scene: "ending_tragedy",
+      },
+      {
+        option_id: "consider_implications",
+        description: "Consider the broader implications",
+        next_scene: "ending_society",
+      },
     ],
   },
 ]
@@ -399,16 +683,16 @@ export default function VictorianBankerCase() {
     if (currentSceneData) {
       setDiscoveredClues((prev) => {
         const newClues = currentSceneData.clues.filter(
-          (clue) => !prev.some((existingClue) => existingClue.id === clue.id),
+          (clue) => !prev.some((existingClue) => existingClue.clue_id === clue.clue_id),
         )
         return [...prev, ...newClues]
       })
     }
   }, [currentScene, currentSceneData])
 
-  const handleOptionClick = (nextScene: string) => {
-    setCurrentScene(nextScene)
-    setSceneHistory((prev) => [...prev, nextScene])
+  const handleOptionClick = (next_scene: string) => {
+    setCurrentScene(next_scene)
+    setSceneHistory((prev) => [...prev, next_scene])
   }
 
   const handleBackToScene = () => {
@@ -771,7 +1055,9 @@ export default function VictorianBankerCase() {
             <div className="space-y-3">
               {currentSceneData.dialogues.map((dialogue, index) => (
                 <div key={index} className="bg-purple-800/50 p-3 rounded-lg border-l-4 border-violet-400/50">
-                  <p className="text-purple-100 font-serif italic text-lg">{dialogue}</p>
+                  <p className="text-purple-100 font-serif italic text-lg">
+                    <strong>{dialogue.character}:</strong> "{dialogue.speech}"
+                  </p>
                 </div>
               ))}
             </div>
@@ -787,7 +1073,7 @@ export default function VictorianBankerCase() {
             </div>
             <div className="grid gap-3">
               {currentSceneData.clues.map((clue) => (
-                <div key={clue.id} className="bg-violet-900/20 p-3 rounded-lg border border-violet-500/30">
+                <div key={clue.clue_id} className="bg-violet-900/20 p-3 rounded-lg border border-violet-500/30">
                   <h4 className="font-serif font-semibold text-violet-200 text-lg">{clue.name}</h4>
                   <p className="text-purple-200 text-base mt-1">{clue.description}</p>
                 </div>
@@ -803,9 +1089,13 @@ export default function VictorianBankerCase() {
             <h3>NEXT ACTION</h3>
           </div>
           <div className="options-grid">
-            {currentSceneData.options.map((option, index) => (
-              <button key={index} className="option-btn" onClick={() => handleOptionClick(option.nextScene)}>
-                <span className="option-text">{option.text}</span>
+            {currentSceneData.options.map((option) => (
+              <button
+                key={option.option_id}
+                className="option-btn"
+                onClick={() => handleOptionClick(option.next_scene)}
+              >
+                <span className="option-text">{option.description}</span>
                 <div className="btn-glow"></div>
               </button>
             ))}
