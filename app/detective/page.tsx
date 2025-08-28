@@ -22,8 +22,8 @@ export default function DetectivePage() {
             <br />
             Interrogate suspects.
           </div>
-          <Link href="/detective-case" className="start-role-btn">
-            Enter Your Case
+          <Link href="/detective/variousCases" className="start-role-btn">
+            Enter Your Cases
           </Link>
         </div>
 

@@ -40,10 +40,10 @@ export default function MenuPage() {
         <button
           className="back-btn nav-btn"
           onClick={() => {
-            router.back();
+            router.push("/welcome"); // Go explicitly to welcome page
           }}
         >
-          ⬅ Back
+          ⬅ Back 
         </button>
       </div>
 
@@ -69,7 +69,7 @@ export default function MenuPage() {
         h1 {
           font-size: 3rem;
           font-weight: bold;
-          margin-bottom: 50px;
+          margin-bottom: 40px;
           color: #4b2dbd;
           text-shadow: 0 0 8px rgba(75, 45, 189, 0.1);
           letter-spacing: 3px;
@@ -78,7 +78,7 @@ export default function MenuPage() {
         .menu-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 40px;
+          gap: 30px;
           width: 100%;
           max-width: 1000px;
         }
@@ -101,33 +101,33 @@ export default function MenuPage() {
         .menu-btn {
           display: block; /* makes the whole button clickable */
           background: linear-gradient(135deg, #a18aff, #dcd4ff);
-          color: black;
+          color: #1e1e2e;
           padding: 20px;
           border-radius: 14px;
-          font-size: 1.3rem;
+          font-size: 1.4rem;
           font-weight: bold;
           cursor: pointer;
           text-align: center;
           text-decoration: none;
-          box-shadow: 0 5px 15px rgba(140, 115, 255, 0.25);
+          box-shadow: 0 5px 15px rgba(140, 115, 255, 0.3);
           transition: all 0.3s ease;
         }
 
         .menu-btn:hover {
-          transform: scale(1.05);
+          transform: translate(-6px) scale(1.05);
           background: linear-gradient(135deg, #bba4ff, #f0e9ff);
-          box-shadow: 0 0 25px rgba(100, 80, 255, 0.35);
+          box-shadow: 0 0 25px rgba(100, 80, 255, 0.4);
         }
 
         .back-btn {
           position: fixed; /* fixed to viewport */
           bottom: 20px;
           left: 20px;
-          padding: 10px 20px;
-          border-radius: 10px;
-          background: linear-gradient(135deg, #b9a9ff, #d4c6ff);
-          color: white;
-          border: none;
+          padding: 12px 20px;
+          border-radius: 15px;
+          background-color: transparent;
+          color: black;
+          border: 2px solid #4b2dbd;
           cursor: pointer;
           font-weight: bold;
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -145,8 +145,8 @@ export default function MenuPage() {
             margin-bottom: 30px;
           }
 
-          .menu-btn {
-            font-size: 1.1rem;
+           .menu-btn {
+            font-size: 1.4rem;
             padding: 16px;
           }
         }

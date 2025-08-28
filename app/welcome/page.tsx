@@ -5,50 +5,39 @@ import Image from "next/image"
 
 export default function WelcomePage() {
   return (
-    <div className="min-h-screen bg-gradient-radial from-[#0b0c26] to-black text-white font-orbitron relative fade-in text-center pb-20">
-      {/* LOGIN button */}
+    <div className="min-h-screen font-orbitron relative flex flex-col items-center justify-center animate-fade-in 
+      bg-[radial-gradient(circle_at_center,#0b0c26,#000000)] text-[#e0e0e0]">
+      
+      {/* LOGIN button (top-right) */}
       <Link
         href="/login"
-        className="absolute top-5 right-5 bg-white text-black px-5 py-2.5 rounded-full font-bold text-sm hover:bg-gray-100 transition-colors duration-300 z-20"
+        className="login-btn"
       >
         LOGIN
       </Link>
 
-      <h1 className="text-5xl md:text-6xl font-bold text-white mt-16 mb-4 tracking-wider shadow-purple">
-        Welcome to{" "}
-        <span className="text-[#7a5cff]">
-          Case<span className="text-[#ff4444] font-bold shadow-red">F</span>iles
-        </span>
-        !
-      </h1>
+      {/* Centered Welcome Image */}
+      <Image
+        src="/images/Welcome.png" // place in /public/images
+        alt="Welcome to CaseFiles"
+        width={1200}
+        height={700}
+        className="max-w-[90%] h-auto shadow-[0_0_25px_#7a5cff] rounded-lg"
+        priority
+      />
 
-      <div className="text-2xl font-bold text-[#a4a4ff] mt-8 mb-2 tracking-wide shadow-purple">
-        Choose. Investigate. Survive. Solve.
-      </div>
-      <p className="text-xl text-gray-300 mb-10">Experience AI-powered crime simulations like never before!</p>
-
-      <div className="flex justify-center items-center mb-10">
-        <Image
-          src="/images/narratives.png"
-          alt="Smart Crime Narratives"
-          width={800}
-          height={450}
-          className="max-w-[90%] rounded-lg shadow-[0_0_25px_#7a5cff]"
-        />
-      </div>
-
-      {/* Continue button */}
+      {/* CONTINUE button (bottom-center) */}
       <Link
         href="/menu"
-        className="bg-[#5c48d3] text-white px-7 py-3 rounded-full text-lg font-bold tracking-wide uppercase cursor-pointer transition-all duration-300 hover:bg-[#7a5cff] shadow-[0_0_10px_#7a5cff] hover:shadow-[0_0_15px_#a494ff] inline-block mb-8"
+        className="continue-btn"
       >
-        Continue
+        CONTINUE
       </Link>
 
-      {/* Back button */}
+      {/* BACK button (bottom-left) */}
       <Link
         href="/"
-        className="fixed bottom-6 left-6 bg-transparent border-2 border-[#7a5cff] text-[#7a5cff] px-5 py-2 rounded-full text-sm font-bold hover:bg-[#7a5cff] hover:text-white transition-all duration-300 z-20"
+        className="back-button"
       >
         ← Back
       </Link>

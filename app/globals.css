@@ -240,14 +240,14 @@
 
 .back-button {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  bottom: 10px;
+  left: 13px;
   background-color: transparent;
   border: 2px solid #7a5cff;
   color: #7a5cff;
   padding: 12px 20px;
   border-radius: 25px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: bold;
   text-decoration: none;
   transition: all 0.3s ease;
@@ -259,3 +259,49 @@
   color: white;
   transform: scale(1.05);
 }
+
+.login-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 7px 14px;        /* bigger padding */
+  font-size: 0.9rem;         /* bigger text */
+  font-weight: bold;
+  border-radius: 12px;
+  background-color: white;
+  /* background: linear-gradient(135deg, #6c63ff, #857dff); */
+  color: black;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #857dff, #a494ff);
+  transform: scale(1.05);
+}
+
+.continue-btn {
+      position: fixed;
+      bottom: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #5c48d3;
+      color: white;
+      padding: 0.8rem 1.8rem;
+      border: none;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: 0.3s ease;
+      text-transform: uppercase;
+      box-shadow: 0 0 10px #7a5cff;
+    }
+
+    .continue-btn:hover {
+      background-color: #7a5cff;
+      box-shadow: 0 0 15px #a494ff;
+    }
