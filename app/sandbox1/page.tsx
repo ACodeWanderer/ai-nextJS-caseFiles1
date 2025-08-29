@@ -6,6 +6,8 @@ import { useState } from "react"
 export default function Sandbox1Page() {
   const [isRealistic, setIsRealistic] = useState(false)
 
+  
+
   return (
     <>
       <div className="sandbox-container">
