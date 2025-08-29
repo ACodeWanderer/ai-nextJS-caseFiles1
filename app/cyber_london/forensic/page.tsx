@@ -1,5 +1,6 @@
 "use client";
 import { ForensicCaseParameters } from "@/types/interface";
+import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -192,6 +193,28 @@ export default function CyberLondonPage() {
     new Promise((resolve) => setTimeout(resolve, 1000)).then(() =>
       setIsLoading(false)
     );
+  }, []);
+
+  useEffect(() => {
+    const fetchCaseData = async () => {
+      setIsLoading(true);
+      // Simulate API delay
+      // await new Promise((resolve) => setTimeout(resolve, 1000))
+      //    http://127.0.0.1:8000 /api/detective-story
+      const response = await axios.post(
+        "http://localhost:8000/api/forensic-story",
+        {
+          prompt: "string",
+        }
+      );
+
+      console.log("API response:", response.data);
+
+    //   setCaseData(story);
+      setIsLoading(false);
+    };
+
+    fetchCaseData();
   }, []);
 
   const currentSceneData = sceneData.find(

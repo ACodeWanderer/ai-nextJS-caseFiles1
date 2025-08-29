@@ -345,7 +345,10 @@ export default function CyberLondonPage() {
     const fetchCaseData = async () => {
       setIsLoading(true)
       // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // await new Promise((resolve) => setTimeout(resolve, 1000))
+      
+
+
       setCaseData(mockCaseData)
       setIsLoading(false)
     }
