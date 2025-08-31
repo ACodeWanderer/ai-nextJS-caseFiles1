@@ -105,7 +105,7 @@ const sceneData = [
 ];
 
 export default function CountrysideManorPage() {
-  const [currentScene, setCurrentScene] = useState("scene_1_intake")
+  const [currentScene, setCurrentScene] = useState<string>("scene_1_intake")
   const [discoveredAnalyses, setDiscoveredAnalyses] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [sceneHistory, setSceneHistory] = useState<string[]>(["scene_1_intake"])
@@ -120,7 +120,7 @@ export default function CountrysideManorPage() {
 
   const handleOptionClick = (option: any) => {
     if (currentSceneData?.analysis) {
-        setDiscoveredAnalyses(prev => [...new Set([...prev, currentSceneData.analysis.exhibit_id])])
+      setDiscoveredAnalyses(prev => [...new Set([...prev, currentSceneData.analysis.exhibit_id])])
     }
 
     if (option.next_scene === "case_solved") {
@@ -129,10 +129,11 @@ export default function CountrysideManorPage() {
       )
       return
     }
+
     setSceneHistory((prev) => [...prev, option.next_scene])
     setCurrentScene(option.next_scene)
   }
-  
+
   const handlePreviousScene = () => {
     if (sceneHistory.length > 1) {
       const newHistory = [...sceneHistory]
@@ -149,29 +150,29 @@ export default function CountrysideManorPage() {
         <div className="loading-spinner"></div>
         <p>Entering the foggy manor...</p>
         <style jsx>{`
-            .loading-screen {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                background: linear-gradient(135deg, #1a2332, #2d3748);
-                color: #e2e8f0;
-                font-family: "Crimson Text", serif;
-            }
-            .loading-spinner {
-                width: 50px;
-                height: 50px;
-                border: 3px solid rgba(139, 69, 19, 0.3);
-                border-top: 3px solid #8b4513;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-                margin-bottom: 20px;
-            }
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
+          .loading-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a2332, #2d3748);
+            color: #e2e8f0;
+            font-family: "Crimson Text", serif;
+          }
+          .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(139, 69, 19, 0.3);
+            border-top: 3px solid #8b4513;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
         `}</style>
       </div>
     )
@@ -185,7 +186,7 @@ export default function CountrysideManorPage() {
       </div>
     )
   }
-  
+
   return (
     <>
       <div className="case-container">
@@ -197,41 +198,67 @@ export default function CountrysideManorPage() {
         )}
         <div className="case-header">
           <h1>Forensic File: The Countryside Manor</h1>
-          <div className="clues-counter">Analyses Completed: {discoveredAnalyses.length} of {forensicCaseFile.exhibits.length}</div>
+          <div className="status-bar">
+            <div className="clues-counter">
+              <span className="label">ANALYSES:</span>
+              <span className="count">{discoveredAnalyses.length}/{forensicCaseFile.exhibits.length}</span>
+            </div>
+            <div className="scene-indicator">
+              <span className="label">STATUS:</span>
+              <span className="scene-id">{currentScene.toUpperCase()}</span>
+            </div>
+          </div>
         </div>
         <div className="scene-content">
           <div className="narration-box">
-            <h3> 🏰 Forensic Summary</h3>
+            <div className="section-header">
+              <span className="icon">🏰</span>
+              <h3>Forensic Summary</h3>
+            </div>
             <p className="narration">{currentSceneData.narration}</p>
           </div>
 
           {currentSceneData.exhibits && (
             <div className="clues-section">
-              <h3> 🔍 Exhibits Logged</h3>
+              <div className="section-header">
+                <span className="icon">🔍</span>
+                <h3>Exhibits Logged</h3>
+              </div>
               {currentSceneData.exhibits.map((exhibit, index) => (
                 <div key={index} className="clue-item">
-                  <strong>{exhibit.name}</strong>
-                  <p>{exhibit.description}</p>
+                  <div className="clue-header">
+                    <strong className="clue-name">{exhibit.name.toUpperCase()}</strong>
+                    <span className="clue-status">PENDING</span>
+                  </div>
+                  <p className="clue-description">{exhibit.description}</p>
                 </div>
               ))}
             </div>
           )}
-          
+
           {currentSceneData.analysis && (
-             <div className="clues-section">
-               <h3> 🔬 Analysis Results: {currentSceneData.analysis.exhibit_id}</h3>
-               <div className="clue-item">
-                 <strong>{currentSceneData.analysis.available_analyses[0].analysis_type.replace('_', ' ')}</strong>
-                 <p>{currentSceneData.analysis.available_analyses[0].results.summary}</p>
-                 <div className={`analysis-status ${currentSceneData.analysis.available_analyses[0].results.is_conclusive ? 'conclusive' : 'inconclusive'}`}>
+            <div className="clues-section">
+              <div className="section-header">
+                <span className="icon">🔬</span>
+                <h3>Analysis Results: {currentSceneData.analysis.exhibit_id}</h3>
+              </div>
+              <div className="clue-item">
+                <div className="clue-header">
+                  <strong className="clue-name">{currentSceneData.analysis.available_analyses[0].analysis_type.replace('_', ' ')}</strong>
+                  <span className={`clue-status ${currentSceneData.analysis.available_analyses[0].results.is_conclusive ? 'verified' : 'inconclusive'}`}>
                     {currentSceneData.analysis.available_analyses[0].results.is_conclusive ? "CONCLUSIVE" : "INCONCLUSIVE"}
-                 </div>
-               </div>
-             </div>
-           )}
+                  </span>
+                </div>
+                <p className="clue-description">{currentSceneData.analysis.available_analyses[0].results.summary}</p>
+              </div>
+            </div>
+          )}
 
           <div className="options-section">
-            <h3> 🤔 Your Next Action</h3>
+            <div className="section-header">
+              <span className="icon">🤔</span>
+              <h3>Your Next Action</h3>
+            </div>
             <div className="options-grid">
               {currentSceneData.options.map((option, index) => (
                 <button
@@ -239,13 +266,14 @@ export default function CountrysideManorPage() {
                   className="option-btn"
                   onClick={() => handleOptionClick(option)}
                 >
-                  {option.description}
+                  <span className="option-text">{option.description}</span>
+                  <div className="btn-glow"></div>
                 </button>
               ))}
             </div>
           </div>
         </div>
-        
+
         <button className="back-button" onClick={() => router.back()}>
           ← Return to Cases
         </button>
@@ -277,42 +305,106 @@ export default function CountrysideManorPage() {
           backdrop-filter: blur(10px);
         }
         .case-header h1 {
-          font-size: 2.8rem; margin: 0 0 10px 0; color: #d4af37;
+          font-size: 2.8rem; margin: 0 0 15px 0; color: #d4af37;
           text-shadow: 2px 2px 4px rgba(0,0,0,0.5); font-weight: 700;
         }
-        .clues-counter { font-size: 1.2rem; color: #cd853f; font-weight: 600; }
+        .status-bar {
+          display: flex;
+          justify-content: center;
+          gap: 40px;
+          font-size: 1.1rem;
+        }
+        .clues-counter, .scene-indicator {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .label {
+          color: #d4af37;
+          font-weight: bold;
+        }
+        .count, .scene-id {
+          color: #e2e8f0;
+          background: rgba(139, 69, 19, 0.3);
+          padding: 4px 8px;
+          border-radius: 4px;
+        }
         .scene-content { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
         .narration-box, .clues-section, .options-section {
           background: rgba(45, 55, 72, 0.8); padding: 25px; border-radius: 15px;
           border-left: 5px solid #8b4513; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
           backdrop-filter: blur(5px);
         }
-        .narration-box h3, .clues-section h3, .options-section h3 {
-          margin: 0 0 18px 0; color: #d4af37; font-size: 1.4rem; font-weight: 600;
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 20px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid rgba(139, 69, 19, 0.4);
+        }
+        .section-header .icon { font-size: 1.2rem; }
+        .section-header h3 {
+          margin: 0; color: #d4af37; font-size: 1.4rem; font-weight: 600;
         }
         .narration { font-size: 1.15rem; line-height: 1.7; font-style: italic; color: #cbd5e0; }
         .clues-section { border-left-color: #cd853f; background: rgba(205, 133, 63, 0.1); }
         .clue-item {
-          background: rgba(212, 175, 55, 0.15); padding: 18px; border-radius: 10px;
-          margin: 12px 0; border: 2px solid #cd853f; position: relative;
+          background: rgba(212, 175, 55, 0.1);
+          padding: 18px; border-radius: 10px;
+          margin: 12px 0; border: 1px solid #cd853f;
         }
-        .clue-item strong { color: #d4af37; display: block; margin-bottom: 8px; font-size: 1.1rem; }
-        .analysis-status {
-            position: absolute; top: 15px; right: 15px; padding: 4px 10px; border-radius: 15px;
-            font-size: 0.8rem; font-weight: bold; color: #1a202c;
+        .clue-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
         }
-        .analysis-status.conclusive { background-color: #d4af37; }
-        .analysis-status.inconclusive { background-color: #a0aec0; }
+        .clue-name { color: #d4af37; font-size: 1.1rem; }
+        .clue-status {
+          padding: 2px 10px;
+          border-radius: 12px;
+          font-size: 0.8rem;
+          font-weight: bold;
+          background: #cd853f;
+          color: #1a202c;
+        }
+        .clue-status.verified {
+          background: #d4af37;
+        }
+        .clue-status.inconclusive {
+          background: #a0aec0;
+          color: #1a202c;
+        }
+        .clue-description {
+          color: #cbd5e0;
+          margin: 0;
+          line-height: 1.6;
+        }
         .options-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
         .option-btn {
           background: linear-gradient(45deg, #8b4513, #a0522d); color: white; border: none;
           padding: 18px 24px; border-radius: 12px; font-size: 1.05rem; font-weight: 600;
           cursor: pointer; transition: all 0.3s ease; font-family: "Crimson Text", serif;
           box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+          position: relative;
+          overflow: hidden;
         }
         .option-btn:hover {
           transform: translateY(-3px); box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
           background: linear-gradient(45deg, #a0522d, #cd853f);
+        }
+        .btn-glow {
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+          transition: left 0.5s;
+        }
+        .option-btn:hover .btn-glow {
+          left: 100%;
         }
         .back-button {
           position: fixed; bottom: 25px; left: 25px; background-color: transparent;
@@ -332,6 +424,7 @@ export default function CountrysideManorPage() {
         .previous-scene-button:hover { background-color: #8b4513; color: white; transform: scale(1.05); }
         @media (max-width: 768px) {
           .case-header h1 { font-size: 2.2rem; }
+          .status-bar { flex-direction: column; gap: 15px; }
           .options-grid { grid-template-columns: 1fr; }
         }
       `}</style>
