@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, ArrowLeft, Snowflake, Mountain } from "lucide-react"
+import Link from "next/link"
 
 const forensicCaseFile = {
   case_name: "Case File: 11-23-PINE-RIDGE",
@@ -106,11 +106,11 @@ const sceneData = [
 
 export default function SnowyLodgePage() {
   const router = useRouter()
-  const [currentScene, setCurrentScene] = useState("scene_1_intake")
+  const [currentScene, setCurrentScene] = useState<string>("scene_1_intake")
   const [discoveredAnalyses, setDiscoveredAnalyses] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [sceneHistory, setSceneHistory] = useState<string[]>(["scene_1_intake"])
-  
+
   useEffect(() => {
     setIsLoading(true);
     new Promise(resolve => setTimeout(resolve, 1000)).then(() => setIsLoading(false));
@@ -120,9 +120,8 @@ export default function SnowyLodgePage() {
 
   const handleOptionClick = (option: any) => {
     if (currentSceneData?.analysis) {
-        setDiscoveredAnalyses(prev => [...new Set([...prev, currentSceneData.analysis.exhibit_id])])
+      setDiscoveredAnalyses(prev => [...new Set([...prev, currentSceneData.analysis.exhibit_id])])
     }
-
     if (option.next_scene === "case_solved") {
       alert(
         "Forensic Report Submitted. Evidence indicates Dr. Chen poisoned Jonathan Blackwood and then staged the scene, using the fireplace poker as a secondary weapon. Trace evidence from melted snow conclusively links her to the crime scene."
@@ -132,10 +131,11 @@ export default function SnowyLodgePage() {
     setSceneHistory((prev) => [...prev, option.next_scene])
     setCurrentScene(option.next_scene)
   }
-  
-  const handleBackClick = () => {
+
+  const goToPreviousScene = () => {
     if (sceneHistory.length > 1) {
-      const newHistory = sceneHistory.slice(0, -1)
+      const newHistory = [...sceneHistory]
+      newHistory.pop()
       const previousScene = newHistory[newHistory.length - 1]
       setSceneHistory(newHistory)
       setCurrentScene(previousScene)
@@ -148,132 +148,253 @@ export default function SnowyLodgePage() {
         <div className="loading-spinner"></div>
         <p>Analyzing samples from the storm...</p>
         <style jsx>{`
-            .loading-screen {
-                display: flex; flex-direction: column; justify-content: center; align-items: center;
-                height: 100vh; background: linear-gradient(135deg, #1e293b 0%, #1e40af 50%, #312e81 100%);
-                color: #f1f5f9;
-            }
-            .loading-spinner {
-                width: 50px; height: 50px; border: 3px solid rgba(241, 245, 249, 0.3);
-                border-top: 3px solid #f1f5f9; border-radius: 50%;
-                animation: spin 1s linear infinite; margin-bottom: 20px;
-            }
-            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          .loading-screen {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            height: 100vh; background: linear-gradient(135deg, #1e293b 0%, #1e40af 50%, #312e81 100%);
+            color: #f1f5f9; font-family: "Inter", sans-serif;
+          }
+          .loading-spinner {
+            width: 50px; height: 50px; border: 3px solid rgba(241, 245, 249, 0.3);
+            border-top: 3px solid #f1f5f9; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+          }
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         `}</style>
       </div>
     )
   }
 
-  const scene = currentSceneData;
-  if (!scene) return <div>Scene not found</div>;
-  
-  return (
-    <div className="case-container">
-      <div className="snow-overlay">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className={`snowflake snowflake-${i + 1}`}>
-            <Snowflake className="w-4 h-4 text-white" />
-          </div>
-        ))}
+  if (!currentSceneData) {
+    return (
+      <div className="error-screen">
+        <h2>Connection Lost</h2>
+        <Link href="/">Return to Detective Hub</Link>
       </div>
-      <div className="scene-content">
-        <div className="case-header">
-          <div className="header-title">
-            <Mountain className="w-8 h-8 text-blue-300" />
-            <h1>Forensics: The Pine Ridge Lodge Mystery</h1>
-          </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="case-container">
+        <div className="snow-overlay">
+          {[...Array(20)].map((_, i) => (<div key={i} className={`snowflake snowflake-${i + 1}`}>❄</div>))}
         </div>
-        
         {sceneHistory.length > 1 && (
-          <button onClick={handleBackClick} className="scene-back-button">
-            <ChevronLeft className="w-4 h-4" /> Previous Step
+          <button className="previous-scene-button" onClick={goToPreviousScene}>
+            <span>← Previous Step</span>
           </button>
         )}
-
-        <div className="scene-box">
-            <div className="scene-narration">
-                <h2 className="scene-title">Forensic Summary</h2>
-                <p className="narration">{scene.narration}</p>
+        <div className="case-header">
+          <h1>Forensics: The Pine Ridge Lodge Mystery</h1>
+          <div className="status-bar">
+            <div className="clues-counter">
+              <span className="label">ANALYSES:</span>
+              <span className="count">{discoveredAnalyses.length}/{forensicCaseFile.exhibits.length}</span>
             </div>
-
-            {scene.exhibits && (
-                <div className="clues-section">
-                    <h3 className="section-title">Evidence for Analysis:</h3>
-                    <div className="clues-grid">
-                        {scene.exhibits.map((exhibit, index) => (
-                            <div key={index} className="clue-tag" title={exhibit.description}>
-                                {exhibit.name}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {scene.analysis && (
-                <div className="clues-section">
-                    <h3 className="section-title">Analysis Results: {scene.analysis.exhibit_id}</h3>
-                    <div className="dialogue-item">
-                        <p className="speaker-name">{scene.analysis.available_analyses[0].analysis_type.replace('_', ' ')}</p>
-                        <p className="dialogue-text">{scene.analysis.available_analyses[0].results.summary}</p>
-                    </div>
-                </div>
-            )}
-
-            <div className="options-section">
-                <h3 className="section-title">Forensic Actions:</h3>
-                <div className="options-grid">
-                {scene.options.map((option, index) => (
-                    <button key={index} onClick={() => handleOptionClick(option)} className="option-btn">
-                    {option.description}
-                    </button>
-                ))}
-                </div>
+            <div className="scene-indicator">
+              <span className="label">STATUS:</span>
+              <span className="scene-id">{currentScene.toUpperCase()}</span>
             </div>
+          </div>
         </div>
+        <div className="scene-content">
+          <div className="narration-box">
+            <div className="section-header">
+              <span className="icon">📍</span>
+              <h3>FORENSIC OVERVIEW</h3>
+            </div>
+            <p className="narration">{currentSceneData.narration}</p>
+          </div>
+
+          {currentSceneData.exhibits && (
+            <div className="clues-section">
+              <div className="section-header">
+                <span className="icon">🔍</span>
+                <h3>EVIDENCE QUEUE</h3>
+              </div>
+              {currentSceneData.exhibits.map((exhibit, index) => (
+                <div key={index} className="clue-item">
+                  <div className="clue-header">
+                    <strong className="clue-name">{exhibit.name.toUpperCase()}</strong>
+                    <span className="clue-status">PENDING</span>
+                  </div>
+                  <p className="clue-description">{exhibit.description}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {currentSceneData.analysis && (
+            <div className="clues-section">
+              <div className="section-header">
+                <span className="icon">🔬</span>
+                <h3>ANALYSIS RESULTS: {currentSceneData.analysis.exhibit_id}</h3>
+              </div>
+              <div className="clue-item">
+                <div className="clue-header">
+                  <strong className="clue-name">{currentSceneData.analysis.available_analyses[0].analysis_type.replace("_", " ")}</strong>
+                  <span className={`clue-status ${currentSceneData.analysis.available_analyses[0].results.is_conclusive ? "verified" : "inconclusive"}`}>
+                    {currentSceneData.analysis.available_analyses[0].results.is_conclusive ? "CONCLUSIVE" : "INCONCLUSIVE"}
+                  </span>
+                </div>
+                <p className="clue-description">{currentSceneData.analysis.available_analyses[0].results.summary}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="options-section">
+            <div className="section-header">
+              <span className="icon">⚡</span>
+              <h3>NEXT ACTION</h3>
+            </div>
+            <div className="options-grid">
+              {currentSceneData.options.map((option, index) => (
+                <button
+                  key={index}
+                  className="option-btn"
+                  onClick={() => handleOptionClick(option)}
+                >
+                  <span className="option-text">{option.description}</span>
+                  <div className="btn-glow"></div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <button className="back-button" onClick={() => router.back()}>
+          <span>← RETURN TO CASES</span>
+        </button>
       </div>
-      
-      <button onClick={() => router.back()} className="back-button">
-        <ArrowLeft className="w-4 h-4" /> Return to Cases
-      </button>
       <style jsx>{`
         .case-container {
-          min-height: 100vh; background: linear-gradient(135deg, #1e293b 0%, #1e40af 50%, #312e81 100%);
-          color: #f1f5f9; font-family: "Inter", sans-serif; padding: 20px; position: relative; overflow-x: hidden;
+          min-height: 100vh;
+          background: linear-gradient(135deg, #1e293b 0%, #1e40af 50%, #312e81 100%);
+          color: #f1f5f9;
+          font-family: "Inter", sans-serif;
+          padding: 20px;
+          position: relative;
+          overflow: hidden;
         }
-        .snow-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 1; }
-        .snowflake { position: absolute; animation: snowfall 8s linear infinite; }
-        .snowflake-1 { top: -10px; left: 10%; animation-delay: 0s; }
-        .snowflake-2 { top: -10px; left: 30%; animation-delay: 2s; }
-        .snowflake-3 { top: -10px; left: 50%; animation-delay: 4s; }
-        .snowflake-4 { top: -10px; left: 70%; animation-delay: 1s; }
-        .snowflake-5 { top: -10px; left: 20%; animation-delay: 3s; }
-        .snowflake-6 { top: -10px; left: 80%; animation-delay: 5s; }
+        .snow-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+        .snowflake { position: absolute; top: -5%; color: white; user-select: none; animation: snowfall linear infinite; }
         @keyframes snowfall {
-          0% { transform: translateY(-10px); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; }
-          100% { transform: translateY(100vh); opacity: 0; }
+          0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(105vh) translateX(20px) rotate(360deg); opacity: 0; }
         }
-        .scene-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; display: flex; flex-direction: column; gap: 25px; }
-        .case-header { text-align: center; margin-bottom: 30px; padding: 25px; background: rgba(30, 58, 138, 0.3); border-radius: 15px; border: 2px solid #3b82f6; box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2); backdrop-filter: blur(10px); }
-        .header-title { display: flex; align-items: center; justify-content: center; gap: 15px; }
-        .case-header h1 { font-size: 2.8rem; margin: 0; color: #dbeafe; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        .scene-back-button { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: rgba(71, 85, 105, 0.5); color: #e2e8f0; border: 2px solid #475569; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; align-self: flex-start; }
-        .scene-back-button:hover { background: #475569; color: white; transform: translateX(-3px); }
-        .scene-box { background: rgba(30, 41, 59, 0.8); padding: 30px; border-radius: 15px; border: 2px solid #475569; box-shadow: 0 8px 32px rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
-        .scene-title { font-size: 2rem; margin: 0 0 20px 0; color: #dbeafe; }
-        .narration { font-size: 1.2rem; line-height: 1.7; color: #f1f5f9; margin-bottom: 25px; }
-        .section-title { font-size: 1.4rem; color: #93c5fd; margin: 25px 0 15px 0; }
-        .dialogue-item { background: rgba(59, 130, 246, 0.15); padding: 18px; border-radius: 10px; border-left: 4px solid #3b82f6; margin: 12px 0; }
-        .speaker-name { font-weight: bold; color: #dbeafe; margin: 0 0 8px 0; font-size: 1.1rem; }
-        .dialogue-text { font-style: italic; color: #f1f5f9; margin: 0; font-size: 1.05rem; }
-        .clues-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-        .clue-tag { padding: 8px 16px; background: rgba(59, 130, 246, 0.3); color: #dbeafe; border-radius: 20px; font-size: 0.9rem; border: 1px solid #3b82f6; }
-        .options-grid { display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-        .option-btn { background: linear-gradient(45deg, #1e40af, #3b82f6); color: white; border: none; padding: 18px 24px; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
-        .option-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4); background: linear-gradient(45deg, #3b82f6, #60a5fa); }
-        .back-button { position: fixed; bottom: 25px; left: 25px; display: flex; align-items: center; gap: 8px; background: transparent; border: 2px solid #3b82f6; color: #dbeafe; padding: 15px 25px; border-radius: 30px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(10px); }
-        .back-button:hover { background: #3b82f6; color: white; transform: scale(1.05); }
-        @media (max-width: 768px) { .case-header h1 { font-size: 2.2rem; } .options-grid { grid-template-columns: 1fr; } }
+        ${[...Array(20)].map((_, i) => `
+          .snowflake-${i+1} {
+            left: ${Math.random() * 100}%;
+            font-size: ${Math.random() * 12 + 8}px;
+            animation-duration: ${Math.random() * 5 + 5}s;
+            animation-delay: ${Math.random() * 5}s;
+          }
+        `).join('')}
+        .case-header {
+          text-align: center; margin-bottom: 30px; padding: 25px;
+          background: rgba(59, 130, 246, 0.1);
+          border-radius: 10px; border: 2px solid #3b82f6;
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+          backdrop-filter: blur(10px);
+        }
+        .case-header h1 {
+          font-size: 2.5rem; margin: 0 0 15px 0; color: #dbeafe;
+          text-shadow: 0 0 15px rgba(219, 234, 254, 0.8);
+          letter-spacing: 2px;
+        }
+        .status-bar {
+          display: flex; justify-content: center; gap: 40px; font-size: 1.1rem;
+        }
+        .clues-counter, .scene-indicator {
+          display: flex; align-items: center; gap: 8px;
+        }
+        .label { color: #93c5fd; font-weight: bold; }
+        .count, .scene-id {
+          color: #dbeafe; background: rgba(59, 130, 246, 0.2);
+          padding: 4px 8px; border-radius: 4px;
+        }
+        .scene-content {
+          max-width: 900px; margin: 0 auto;
+          display: flex; flex-direction: column; gap: 25px;
+        }
+        .narration-box, .dialogue-section, .clues-section, .options-section {
+          background: rgba(30, 41, 59, 0.7); padding: 25px; border-radius: 10px;
+          border: 1px solid #3b82f6;
+          box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+          backdrop-filter: blur(5px);
+        }
+        .section-header {
+          display: flex; align-items: center; gap: 10px;
+          margin-bottom: 20px; padding-bottom: 10px;
+          border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .section-header h3 {
+          margin: 0; color: #93c5fd; font-size: 1.2rem; letter-spacing: 1px;
+        }
+        .narration {
+          font-size: 1.1rem; line-height: 1.7; color: #e2e8f0; font-style: italic;
+        }
+        .clues-section { border-color: #3b82f6; }
+        .clue-item {
+          background: rgba(59, 130, 246, 0.1); padding: 18px;
+          border-radius: 8px; margin: 15px 0; border: 1px solid #3b82f6;
+        }
+        .clue-header {
+          display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+        }
+        .clue-name { color: #93c5fd; font-size: 1.1rem; }
+        .clue-status {
+          padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; font-weight: bold;
+          background: #93c5fd; color: #000;
+        }
+        .clue-status.verified { background: #dbeafe; }
+        .clue-status.inconclusive { background: #64748b; color: #fff; }
+        .clue-description { color: #e2e8f0; margin: 0; line-height: 1.5; }
+        .options-grid {
+          display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+        .option-btn {
+          background: linear-gradient(45deg, #1e40af, #3b82f6);
+          color: #fff; border: none; padding: 18px 25px; border-radius: 8px;
+          font-size: 1rem; font-weight: bold; cursor: pointer;
+          transition: all 0.3s ease; position: relative;
+          font-family: "Inter", sans-serif; overflow: hidden;
+        }
+        .option-btn:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        .btn-glow {
+          position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+          transition: left 0.5s;
+        }
+        .option-btn:hover .btn-glow { left: 100%; }
+        .back-button {
+          position: fixed; bottom: 20px; left: 20px; background: transparent;
+          border: 2px solid #3b82f6; color: #dbeafe;
+          padding: 12px 20px; border-radius: 25px; font-size: 1rem; font-weight: bold;
+          cursor: pointer; transition: all 0.3s ease; font-family: "Inter", sans-serif;
+        }
+        .back-button:hover {
+          background: #3b82f6; color: #000;
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); transform: scale(1.05);
+        }
+        .previous-scene-button {
+          position: fixed; top: 20px; left: 20px; background: transparent;
+          border: 2px solid #93c5fd; color: #93c5fd;
+          padding: 10px 18px; border-radius: 25px; font-size: 0.9rem; font-weight: bold;
+          cursor: pointer; transition: all 0.3s ease; font-family: "Inter", sans-serif; z-index: 1000;
+        }
+        .previous-scene-button:hover {
+          background: #93c5fd; color: #000;
+          box-shadow: 0 0 20px rgba(147, 197, 253, 0.5); transform: scale(1.05);
+        }
+        @media (max-width: 768px) {
+          .case-header h1 { font-size: 2rem; }
+          .status-bar { flex-direction: column; gap: 15px; }
+          .options-grid { grid-template-columns: 1fr; }
+        }
       `}</style>
-    </div>
+    </>
   )
 }
