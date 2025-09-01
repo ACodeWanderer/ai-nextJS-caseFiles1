@@ -1,694 +1,615 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import useSWR from "swr"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, ArrowLeft, Snowflake, Mountain } from "lucide-react"
+import axios from "axios"
 
-// Types matching the UI structure
-interface Dialogue {
-  character: string
-  speech: string
+// Types aligned with the noir survivor example.
+interface Decision {
+  decision_id: string
+  next_memory_id: string
+  description: string
+  outcome_type: string
 }
+
+interface IntuitionPrompt {
+  prompt_id: string
+  prompt_text: string
+}
+
+interface Memory {
+  memory_id: string
+  internal_monologue: string
+  decisions: Decision[]
+  emotional_state: string
+  trauma_distortion_level: string
+  intuition_prompts?: IntuitionPrompt[]
+}
+
+interface SurvivorStoryData {
+  story: {
+    scenario_name?: string
+    // Some payloads provide a single memory at the top-level of `story`
+    // while others provide `memories: Memory[]`.
+    // We'll normalize both shapes.
+    memory_id?: string
+    internal_monologue?: string
+    emotional_state?: string
+    trauma_distortion_level?: string
+    decisions?: Decision[]
+    memories?: Memory[]
+  }
+}
+
+// Narrative/scene model for the UI.
 interface Clue {
   clue_id: string
   name: string
   description: string
 }
+
 interface Option {
   option_id: string
+  next_scene: string
   description: string
-  next_scene: string | null
-  required_clues?: string[]
 }
+
 interface Scene {
   scene_id: string
   narration: string
-  dialogues: Dialogue[]
-  background_audio: string
-  clues: Clue[]
   options: Option[]
+  clues?: Clue[]
 }
 
-// Types for the pasted-text dataset
-interface PastedDecision {
-  decision_id: string
-  outcome_type: string
-  description: string
-  next_memory_id?: string | null
-}
-interface PastedMemory {
-  memory_id: string
-  internal_monologue: string
-  emotional_state?: string
-  trauma_distortion_level?: string
-  decisions: PastedDecision[]
-}
-interface PastedStory {
-  story: {
-    scenario_name: string
-    memories: PastedMemory[]
-  }
+interface NarrativeCaseData {
+  title: string
+  scenes: Scene[]
 }
 
-// Fallback JSON from pasted-text (embedded so the UI always loads)
-const pastedFallback: PastedStory = {
+// This is intentionally minimal; the normalizer will convert it into a memories array.
+const fallbackRaw: SurvivorStoryData = {
   story: {
-    scenario_name: "Country Manor Murder",
-    memories: [
+    emotional_state: "FEAR",
+    trauma_distortion_level: "MEDIUM",
+    internal_monologue:
+      "The polished oak floor gleamed under the flickering gaslight, reflecting the horrified faces gathered around… him. My father. Lying there, still, the crimson stain spreading like a malevolent flower across his crisp shirt. My breath hitched, a strangled sob caught in my throat. Was it the wine? Or the look in my brother Edward’s eyes? Or was it the way my sister, Clara, clutched her pearls, her usually perfect composure shattered? I should feel grief, overwhelming grief, but a cold dread is settling over me. Someone in this room killed him.",
+    memory_id: "memory_1",
+    decisions: [
       {
-        memory_id: "memory_1",
-        internal_monologue:
-          "The polished oak floor gleamed under the flickering candlelight, reflecting the horrified faces surrounding my father's lifeless body.  A sickeningly sweet metallic scent hung in the air, mingling with the aroma of the half-eaten roast.  His eyes, wide and vacant, stared up at the ornate ceiling.  This can't be real. This isn't happening. I need to get out of here.  Is it really over?",
-        decisions: [
-          {
-            decision_id: "decision_1",
-            outcome_type: "TEMPORARY_SAFETY",
-            description: "Attempt to call for help, ignoring the chaos.",
-            next_memory_id: "memory_2",
-          },
-          {
-            next_memory_id: "memory_3",
-            description: "Stay with the body to help with the investigation.",
-            decision_id: "decision_2",
-            outcome_type: "DANGEROUS_CONFRONTATION",
-          },
-        ],
-        trauma_distortion_level: "HIGH",
-        emotional_state: "PANIC",
+        next_memory_id: "memory_2",
+        description: "Approach the body, ignoring the unsettling feeling.",
+        outcome_type: "DANGEROUS_CONFRONTATION",
+        decision_id: "decision_1",
       },
       {
-        memory_id: "memory_2",
-        emotional_state: "FEAR",
-        internal_monologue:
-          "My hands trembled as I fumbled for my phone. The signal was weak, barely a whisper.  Each ring felt like an eternity.  Was anyone going to answer?  I could feel the eyes of my siblings on me, heavy with a mixture of shock and... something else?  Suspicion?  I had to get through. I had to get help. I had to escape this nightmare.",
-        decisions: [
-          {
-            description: "Continue trying to call emergency services.",
-            decision_id: "decision_3",
-            outcome_type: "ESCAPE_ROUTE",
-            next_memory_id: "memory_4",
-          },
-          {
-            description: "Try to find a landline, hoping for a better connection.",
-            next_memory_id: "memory_5",
-            outcome_type: "TEMPORARY_SAFETY",
-            decision_id: "decision_4",
-          },
-        ],
-        trauma_distortion_level: "MEDIUM",
-      },
-      {
-        memory_id: "memory_3",
-        decisions: [
-          {
-            outcome_type: "DANGEROUS_CONFRONTATION",
-            decision_id: "decision_5",
-            description: "Discreetly examine the body for clues.",
-            next_memory_id: "memory_6",
-          },
-          {
-            decision_id: "decision_6",
-            next_memory_id: "memory_7",
-            outcome_type: "TEMPORARY_SAFETY",
-            description: "Wait for the authorities, trying not to give away any reactions.",
-          },
-        ],
-        emotional_state: "CONFUSION",
-        trauma_distortion_level: "LOW",
-        internal_monologue:
-          "I knelt beside my father, a strange calm settling over me as I fought the rising tide of panic.  The details swam into focus: a dark stain on his shirt, oddly precise, not like a random splash.  This was... planned.  My siblings watched, their expressions unreadable.  Was this a test?  What did they know? Was this something more?",
-      },
-      {
-        emotional_state: "DETERMINATION",
-        memory_id: "memory_4",
-        decisions: [],
-        internal_monologue:
-          "Finally, the operator answered, my voice trembling, barely audible.  Relief flooded through me, a wave washing over the terror. Sirens in the distance became a beacon of hope. This could be my way out of this nightmare. I could finally escape.",
-        trauma_distortion_level: "LOW",
-      },
-      {
-        emotional_state: "FEAR",
-        memory_id: "memory_5",
-        trauma_distortion_level: "MEDIUM",
-        internal_monologue:
-          "The ancient landline seemed to crackle with static as I dialed, my hand shaking.  The old house felt oppressive, the silence broken only by the rhythmic tick-tock of a grandfather clock in the hall. It was as if the house itself held its breath, waiting. My hope was fading.",
-        decisions: [
-          {
-            decision_id: "decision_7",
-            outcome_type: "ESCAPE_ROUTE",
-            description: "Try to get out of the house while the lines are busy.",
-            next_memory_id: "memory_8",
-          },
-          {
-            next_memory_id: "memory_9",
-            description: "Wait for the authorities to come.",
-            decision_id: "decision_8",
-            outcome_type: "TEMPORARY_SAFETY",
-          },
-        ],
-      },
-      {
-        memory_id: "memory_6",
-        trauma_distortion_level: "LOW",
-        internal_monologue:
-          "My fingers brushed against the damp fabric of my father's shirt. The stain was darker than I thought, almost black.  A pinprick of blood welled on my fingertip.  I recoiled, fear twisting in my gut.  This wasn't an accident. This was murder.",
-        decisions: [],
-        emotional_state: "FEAR",
-      },
-      {
-        emotional_state: "DETERMINATION",
-        trauma_distortion_level: "LOW",
-        memory_id: "memory_7",
-        decisions: [],
-        internal_monologue:
-          "I forced myself to remain still, outwardly calm as the first police car screeched to a halt outside.  The flashing blue and red lights cast long, dancing shadows on the walls. The sight filled me with grim determination to get through this, to find justice for my father.",
-      },
-      {
-        internal_monologue:
-          "With a silent prayer, I slipped out the back door, my heart pounding a frantic rhythm against my ribs.  The cool night air was a stark contrast to the stifling atmosphere inside.  I ran, not looking back, until I was far away from the manor, and far from the horrors that awaited within.",
-        trauma_distortion_level: "LOW",
-        emotional_state: "FEAR",
-        decisions: [],
-        memory_id: "memory_8",
-      },
-      {
-        decisions: [],
-        trauma_distortion_level: "LOW",
-        emotional_state: "CONFUSION",
-        memory_id: "memory_9",
-        internal_monologue:
-          "The arrival of the police brought a semblance of order to the chaos.  The house, once a scene of horror, was now a crime scene, sterile and contained. While waiting, I started to replay events in my head and question all my siblings.",
+        decision_id: "decision_2",
+        next_memory_id: "memory_3",
+        description: "Stay back, observe the others, try to find clues.",
+        outcome_type: "TEMPORARY_SAFETY",
       },
     ],
   },
 }
 
-// Map pasted-text memories/decisions into the Snowy Lodge scenes/options shape
-function mapPastedToScenes(data: PastedStory): Scene[] {
-  const memories = data?.story?.memories || []
-  const idToSceneId = new Map<string, string>()
-  const numbered = memories.map((m, idx) => {
-    const num = m.memory_id?.split("_")[1]
-    const sceneId = num ? `scene_${num}` : `scene_${idx + 1}`
-    idToSceneId.set(m.memory_id, sceneId)
-    return { memory: m, sceneId }
-  })
-  return numbered.map(({ memory, sceneId }, i) => {
-    const options: Option[] = (memory.decisions || []).map((d, j) => {
-      const next_scene = d.next_memory_id ? idToSceneId.get(d.next_memory_id) || null : null
-      return {
-        option_id: `opt_${sceneId.split("_")[1] || i + 1}_${j + 1}`,
-        description: d.description,
-        next_scene,
+function normalizeSurvivorPayload(input: SurvivorStoryData | null): SurvivorStoryData | null {
+  if (!input || !input.story) return input
+  const s = input.story
+
+  if (Array.isArray(s.memories) && s.memories.length > 0) return input
+
+  // If the payload is the compact form (top-level memory fields), wrap as a single memory.
+  const singleMemory: Memory | null =
+    s.memory_id && s.internal_monologue && s.emotional_state && s.trauma_distortion_level
+      ? {
+          memory_id: s.memory_id,
+          internal_monologue: s.internal_monologue,
+          emotional_state: s.emotional_state,
+          trauma_distortion_level: s.trauma_distortion_level,
+          decisions: s.decisions ?? [],
+        }
+      : null
+
+  return {
+    story: {
+      scenario_name: s.scenario_name ?? "Snowy Lodge Survivor",
+      memories: singleMemory ? [singleMemory] : [],
+    },
+  }
+}
+
+function transformSurvivorData(data: SurvivorStoryData | null): NarrativeCaseData | null {
+  if (!data || !data.story || !data.story.memories) return null
+
+  const scenes: Scene[] = data.story.memories.map((memory: Memory) => {
+    const clues: Clue[] = [
+      {
+        clue_id: `${memory.memory_id}_emotion`,
+        name: "Emotional State",
+        description: memory.emotional_state,
+      },
+      {
+        clue_id: `${memory.memory_id}_trauma`,
+        name: "Trauma Distortion",
+        description: `Level: ${memory.trauma_distortion_level}`,
+      },
+    ]
+
+    if (memory.intuition_prompts) {
+      for (const p of memory.intuition_prompts) {
+        clues.push({
+          clue_id: p.prompt_id,
+          name: "Intuition",
+          description: p.prompt_text,
+        })
       }
-    })
+    }
+
     return {
-      scene_id: sceneId,
+      scene_id: memory.memory_id,
       narration: memory.internal_monologue,
-      dialogues: [], // pasted-text has no dialogues
-      background_audio: "mystery",
-      clues: [], // none in pasted-text
-      options,
+      options: (memory.decisions || []).map((d) => ({
+        option_id: d.decision_id,
+        next_scene: d.next_memory_id,
+        description: d.description,
+      })),
+      clues,
     }
   })
+
+  return {
+    title: data.story.scenario_name || "Snowy Lodge Survivor",
+    scenes,
+  }
 }
 
-// Dummy fetcher with simulated latency
-const fetcher = async (url: string) => {
-  await new Promise((r) => setTimeout(r, 800)) // simulate network delay
-  const res = await fetch(url)
-  if (!res.ok) throw new Error("Failed to load")
-  return res.json()
-}
-
-export default function SnowyLodgePage() {
+export default function SnowyLodgeSurvivorPage() {
   const router = useRouter()
+  const [survivorData, setSurvivorData] = useState<SurvivorStoryData | null>(null)
+  const [currentScene, setCurrentScene] = useState<string | null>(null)
+  const [sceneHistory, setSceneHistory] = useState<string[]>([])
+  const [discoveredInsightIds, setDiscoveredInsightIds] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  const initialScenes = useMemo(() => mapPastedToScenes(pastedFallback), [])
-  const [scenes, setScenes] = useState<Scene[]>(initialScenes)
-  const [currentScene, setCurrentScene] = useState(scenes[0]?.scene_id || "scene_1")
-  const [discoveredClues, setDiscoveredClues] = useState<Clue[]>([])
-  const [sceneHistory, setSceneHistory] = useState<string[]>([currentScene])
-
-  // SWR-based dummy API call (no server route required; falls back to embedded data)
-  const { data } = useSWR<PastedStory>("/api/snowy-lodge-story", fetcher, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-  })
-
-  // When data arrives, map and reset scene state
   useEffect(() => {
-    if (!data) return
-    try {
-      const mapped = mapPastedToScenes(data)
-      if (mapped.length) {
-        setScenes(mapped)
-        setCurrentScene(mapped[0].scene_id)
-        setSceneHistory([mapped[0].scene_id])
-        setDiscoveredClues([])
+    const fetchData = async () => {
+      setIsLoading(true)
+      try {
+        const res = await axios.post<SurvivorStoryData>("/api/survivor-story", {
+          case: "snowy_lodge",
+        })
+        setSurvivorData(res.data)
+      } catch (err) {
+        console.warn("[v0] survivor API failed, using fallback:", err)
+        setSurvivorData(fallbackRaw)
+      } finally {
+        // small UX delay
+        await new Promise((r) => setTimeout(r, 700))
+        setIsLoading(false)
       }
-    } catch {
-      // ignore mapping errors and keep fallback
     }
-  }, [data])
+    fetchData()
+  }, [])
 
-  const scene = scenes.find((s) => s.scene_id === currentScene)
+  const normalized = useMemo(() => normalizeSurvivorPayload(survivorData), [survivorData])
+  const caseData = useMemo(() => transformSurvivorData(normalized), [normalized])
 
   useEffect(() => {
-    if (scene?.clues?.length) {
-      setDiscoveredClues((prev) => {
-        const existingIds = new Set(prev.map((c) => c.clue_id))
-        const newClues = scene.clues.filter((c) => !existingIds.has(c.clue_id))
-        return [...prev, ...newClues]
-      })
+    if (!currentScene && caseData?.scenes?.length) {
+      const firstId = caseData.scenes[0].scene_id
+      setCurrentScene(firstId)
+      setSceneHistory([firstId])
     }
-  }, [currentScene, scene])
+  }, [caseData, currentScene])
 
-  const handleOptionClick = (nextScene: string | null) => {
-    if (nextScene) {
-      setCurrentScene(nextScene)
-      setSceneHistory((prev) => [...prev, nextScene])
-    }
+  const scene = useMemo(
+    () => caseData?.scenes.find((s) => s.scene_id === currentScene) ?? null,
+    [caseData, currentScene],
+  )
+
+  useEffect(() => {
+    if (!scene?.clues) return
+    const newIds = scene.clues.map((c) => c.clue_id)
+    setDiscoveredInsightIds((prev) => [...new Set([...prev, ...newIds])])
+  }, [scene?.scene_id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleChoose = (opt: Option) => {
+    setCurrentScene(opt.next_scene)
+    setSceneHistory((prev) => [...prev, opt.next_scene])
   }
 
-  const handleBackClick = () => {
-    if (sceneHistory.length > 1) {
-      const newHistory = sceneHistory.slice(0, -1)
-      const previousScene = newHistory[newHistory.length - 1]
-      setSceneHistory(newHistory)
-      setCurrentScene(previousScene)
-    }
+  const handleReconsider = () => {
+    if (sceneHistory.length <= 1) return
+    const newHistory = sceneHistory.slice(0, -1)
+    const prevId = newHistory[newHistory.length - 1]
+    setSceneHistory(newHistory)
+    setCurrentScene(prevId)
   }
 
-  if (!scene) {
+  if (isLoading || !caseData || !currentScene) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-blue-900 flex items-center justify-center text-white">
-        Scene not found
+      <div className="loading-screen">
+        <div className="snow-spinner" />
+        <p>Memories stirring beneath the snow...</p>
+        <style jsx>{`
+          .loading-screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0b1220, #1e293b);
+            color: #e5f0ff;
+            font-family: "Crimson Text", serif;
+          }
+          .snow-spinner {
+            width: 56px;
+            height: 56px;
+            border: 3px solid rgba(96, 165, 250, 0.3);
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+          }
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
       </div>
     )
   }
 
-  return (
-    <div className="case-container">
-      {/* Snow effect background */}
-      <div className="snow-overlay">
-        <div className="snowflake snowflake-1">
-          <Snowflake className="w-4 h-4 text-white" />
-        </div>
-        <div className="snowflake snowflake-2">
-          <Snowflake className="w-3 h-3 text-blue-200" />
-        </div>
-        <div className="snowflake snowflake-3">
-          <Snowflake className="w-5 h-5 text-slate-300" />
-        </div>
-        <div className="snowflake snowflake-4">
-          <Snowflake className="w-4 h-4 text-white" />
-        </div>
-        <div className="snowflake snowflake-5">
-          <Snowflake className="w-3 h-3 text-blue-100" />
-        </div>
-        <div className="snowflake snowflake-6">
-          <Snowflake className="w-4 h-4 text-slate-200" />
-        </div>
+  if (!scene) {
+    return (
+      <div className="error-screen">
+        <h2>Memory lost in the storm</h2>
+        <button className="back-button" onClick={() => router.back()}>
+          Return to warmth
+        </button>
+        <style jsx>{`
+          .error-screen {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #0b1220, #1e293b);
+            color: #e5f0ff;
+            font-family: "Crimson Text", serif;
+            gap: 12px;
+          }
+          .back-button {
+            background: transparent;
+            border: 2px solid #60a5fa;
+            color: #e5f0ff;
+            padding: 10px 18px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+          .back-button:hover {
+            background: #60a5fa;
+            color: #0b1220;
+          }
+        `}</style>
       </div>
+    )
+  }
 
-      <div className="scene-content">
-        {/* Header */}
-        <div className="case-header">
-          <div className="header-title">
-            <Mountain className="w-8 h-8 text-blue-300" />
-            <h1>The Pine Ridge Lodge Mystery</h1>
-            <Mountain className="w-8 h-8 text-blue-300" />
-          </div>
-          <p className="subtitle">A Locked-Room Murder in the Mountains</p>
-        </div>
+  const isEnding = scene.options.length === 0
 
-        {/* Previous Scene button */}
-        {sceneHistory.length > 1 && (
-          <button onClick={handleBackClick} className="scene-back-button">
-            <ChevronLeft className="w-4 h-4" />
-            Previous Scene
-          </button>
-        )}
+  return (
+    <>
+      <div className="case-container">
+        <div className="snow-overlay" aria-hidden="true" />
 
-        {/* Scene content */}
-        <div className="scene-box">
-          <div className="scene-narration">
-            <h2 className="scene-title">Scene {currentScene.split("_")[1]}</h2>
-            <p className="narration">{scene.narration}</p>
-          </div>
+        <header className="case-header">
+          <h1>{caseData.title}</h1>
+          <p className="subtitle">A survivor’s account amidst the drifts</p>
+          <div className="insight-counter">Insights: {discoveredInsightIds.length}</div>
+        </header>
 
-          {/* Dialogues */}
-          {scene.dialogues && scene.dialogues.length > 0 && (
-            <div className="dialogue-section">
-              <h3 className="section-title">Conversations:</h3>
-              {scene.dialogues.map((dialogue, index) => (
-                <div key={index} className="dialogue-item">
-                  <p className="speaker-name">{dialogue.character}:</p>
-                  <p className="dialogue-text">"{dialogue.speech}"</p>
-                </div>
-              ))}
-            </div>
+        <main className="scene-wrap">
+          {sceneHistory.length > 1 && !isEnding && (
+            <button className="scene-back" onClick={handleReconsider}>
+              ← Reconsider
+            </button>
           )}
 
-          {/* Clues discovered */}
+          <section className="narration-box">
+            <h3 className="section-title">Internal Monologue</h3>
+            <p className="narration">{scene.narration}</p>
+          </section>
+
           {scene.clues && scene.clues.length > 0 && (
-            <div className="clues-section">
-              <h3 className="section-title">Evidence Discovered:</h3>
-              <div className="clues-grid">
-                {scene.clues.map((clue, index) => (
-                  <span key={index} className="clue-tag" title={clue.description}>
-                    {clue.name}
-                  </span>
+            <section className="clues-box">
+              <h3 className="section-title">Insights & Intuitions</h3>
+              <div className="clues-list">
+                {scene.clues.map((c) => (
+                  <div className="clue-item" key={c.clue_id}>
+                    <strong>{c.name}</strong>
+                    <p>{c.description}</p>
+                  </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Options */}
-          <div className="options-section">
-            <h3 className="section-title">Your Next Move:</h3>
-            <div className="options-grid">
-              {scene.options.map((option, index) => (
-                <button key={index} onClick={() => handleOptionClick(option.next_scene)} className="option-btn">
-                  {option.description}
+          <section className="options-box">
+            <h3 className="section-title">{isEnding ? "The Memory Fades" : "What do you do?"}</h3>
+            {!isEnding ? (
+              <div className="options-grid">
+                {scene.options.map((o) => (
+                  <button key={o.option_id} className="option-btn" onClick={() => handleChoose(o)}>
+                    {o.description}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="ending-wrap">
+                <p className="ending-text">This memory reaches its end.</p>
+                <button className="back-main" onClick={() => router.back()}>
+                  Leave the storm
                 </button>
-              ))}
-            </div>
-          </div>
-        </div>
+              </div>
+            )}
+          </section>
+        </main>
 
-        {/* Clues sidebar */}
-        {discoveredClues.length > 0 && (
-          <div className="evidence-sidebar">
-            <h3 className="sidebar-title">Evidence Collected:</h3>
-            <div className="evidence-grid">
-              {discoveredClues.map((clue, index) => (
-                <span key={index} className="evidence-tag" title={clue.description}>
-                  {clue.name}
-                </span>
-              ))}
+        {discoveredInsightIds.length > 0 && (
+          <aside className="evidence-panel" aria-label="Collected Memory Fragments">
+            <h3>Memory Fragments</h3>
+            <div className="frag-list">
+              {discoveredInsightIds.map((id) => {
+                const clue = caseData.scenes.flatMap((s) => s.clues || []).find((c) => c.clue_id === id)
+                if (!clue) return null
+                return (
+                  <div key={id} className="frag-item">
+                    {clue.name}
+                  </div>
+                )
+              })}
             </div>
-          </div>
+          </aside>
         )}
+
+        <button className="leave-btn" onClick={() => router.back()}>
+          ← Return to Cases
+        </button>
       </div>
 
-      {/* Return to Cases button - positioned at bottom-left */}
-      <button onClick={() => router.back()} className="back-button">
-        <ArrowLeft className="w-4 h-4" />
-        Return to Cases
-      </button>
-
       <style jsx>{`
+        /* Color system: 
+           Primary: #60a5fa (sky blue)
+           Neutrals: #0b1220, #1e293b, #e5f0ff
+           Accent: #22d3ee (cyan)
+           No gradients beyond subtle backgrounds; strong contrast maintained. */
+
         .case-container {
           min-height: 100vh;
-          background: linear-gradient(135deg, #1e293b 0%, #1e40af 50%, #312e81 100%);
-          color: #f1f5f9;
-          font-family: "Inter", sans-serif;
+          background: linear-gradient(135deg, #0b1220 0%, #1e293b 50%, #0b1220 100%);
+          color: #e5f0ff;
+          font-family: "Crimson Text", serif;
           padding: 20px;
           position: relative;
           overflow-x: hidden;
         }
 
         .snow-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
           pointer-events: none;
-          z-index: 1;
+          position: fixed;
+          inset: 0;
+          background-image: radial-gradient(circle at 30% -10%, rgba(96, 165, 250, 0.12), transparent 50%),
+            radial-gradient(circle at 80% 0%, rgba(34, 211, 238, 0.08), transparent 40%),
+            radial-gradient(circle at 60% 100%, rgba(96, 165, 250, 0.08), transparent 60%);
+          animation: drift 22s ease-in-out infinite;
         }
-
-        .snowflake {
-          position: absolute;
-          animation: snowfall 8s linear infinite;
-        }
-
-        .snowflake-1 { top: -10px; left: 10%; animation-delay: 0s; }
-        .snowflake-2 { top: -10px; left: 30%; animation-delay: 2s; }
-        .snowflake-3 { top: -10px; left: 50%; animation-delay: 4s; }
-        .snowflake-4 { top: -10px; left: 70%; animation-delay: 1s; }
-        .snowflake-5 { top: -10px; left: 20%; animation-delay: 3s; }
-        .snowflake-6 { top: -10px; left: 80%; animation-delay: 5s; }
-
-        @keyframes snowfall {
-          0% { transform: translateY(-10px) rotate(0deg); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-        }
-
-        .scene-content {
-          max-width: 900px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 2;
-          display: flex;
-          flex-direction: column;
-          gap: 25px;
+        @keyframes drift {
+          0%,
+          100% {
+            transform: translateY(0px);
+            opacity: 0.85;
+          }
+          50% {
+            transform: translateY(8px);
+            opacity: 1;
+          }
         }
 
         .case-header {
           text-align: center;
-          margin-bottom: 30px;
-          padding: 25px;
-          background: rgba(30, 58, 138, 0.3);
-          border-radius: 15px;
-          border: 2px solid #3b82f6;
-          box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+          margin: 0 auto 24px;
+          padding: 20px;
+          max-width: 900px;
+          background: rgba(15, 23, 42, 0.7);
+          border: 2px solid #60a5fa;
+          border-radius: 14px;
+          box-shadow: 0 8px 28px rgba(96, 165, 250, 0.2);
           backdrop-filter: blur(10px);
         }
-
-        .header-title {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 15px;
-          margin-bottom: 15px;
-        }
-
         .case-header h1 {
-          font-size: 2.8rem;
-          margin: 0;
-          color: #dbeafe;
-          text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-          font-weight: 700;
+          margin: 0 0 6px 0;
+          font-size: 2.4rem;
+          color: #e5f0ff;
         }
-
         .subtitle {
-          color: #93c5fd;
-          font-size: 1.2rem;
+          margin: 0 0 8px 0;
+          color: #cfe6ff;
           font-style: italic;
-          margin: 0;
+        }
+        .insight-counter {
+          font-weight: 600;
+          color: #22d3ee;
         }
 
-        .scene-back-button {
+        .scene-wrap {
+          max-width: 900px;
+          margin: 0 auto;
           display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 20px;
-          background: rgba(71, 85, 105, 0.5);
-          color: #e2e8f0;
-          border: 2px solid #475569;
-          border-radius: 25px;
-          font-size: 1rem;
+          flex-direction: column;
+          gap: 20px;
+          position: relative;
+        }
+        .scene-back {
+          align-self: flex-start;
+          background: rgba(96, 165, 250, 0.12);
+          color: #e5f0ff;
+          border: 2px solid #60a5fa;
+          padding: 10px 16px;
+          border-radius: 999px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.3s ease;
-          margin-bottom: 20px;
-          align-self: flex-start;
+          transition: all 0.2s ease;
         }
-
-        .scene-back-button:hover {
-          background: #475569;
-          color: white;
-          transform: translateX(-3px);
-          box-shadow: 0 4px 15px rgba(71, 85, 105, 0.4);
-        }
-
-        .scene-box {
-          background: rgba(30, 41, 59, 0.8);
-          padding: 30px;
-          border-radius: 15px;
-          border: 2px solid #475569;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-          backdrop-filter: blur(10px);
-        }
-
-        .scene-title {
-          font-size: 2rem;
-          margin: 0 0 20px 0;
-          color: #dbeafe;
-          font-weight: 600;
-        }
-
-        .narration {
-          font-size: 1.2rem;
-          line-height: 1.7;
-          color: #f1f5f9;
-          margin-bottom: 25px;
+        .scene-back:hover {
+          background: #60a5fa;
+          color: #0b1220;
+          transform: translateX(-2px);
         }
 
         .section-title {
-          font-size: 1.4rem;
-          color: #93c5fd;
-          margin: 25px 0 15px 0;
-          font-weight: 600;
+          margin: 0 0 10px 0;
+          color: #60a5fa;
+          font-weight: 700;
+          font-size: 1.25rem;
         }
 
-        .dialogue-section {
-          margin: 25px 0;
+        .narration-box,
+        .clues-box,
+        .options-box {
+          background: rgba(15, 23, 42, 0.78);
+          border: 1.5px solid rgba(96, 165, 250, 0.35);
+          border-left: 4px solid #60a5fa;
+          box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+          padding: 20px;
+          border-radius: 14px;
+          backdrop-filter: blur(6px);
         }
 
-        .dialogue-item {
-          background: rgba(59, 130, 246, 0.15);
-          padding: 18px;
-          border-radius: 10px;
-          border-left: 4px solid #3b82f6;
-          margin: 12px 0;
-        }
-
-        .speaker-name {
-          font-weight: bold;
-          color: #dbeafe;
-          margin: 0 0 8px 0;
+        .narration {
+          color: #e5f0ff;
+          line-height: 1.7;
           font-size: 1.1rem;
-        }
-
-        .dialogue-text {
           font-style: italic;
-          color: #f1f5f9;
+        }
+
+        .clues-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 12px;
+        }
+        .clue-item {
+          background: rgba(34, 211, 238, 0.08);
+          border: 1.5px solid rgba(34, 211, 238, 0.45);
+          padding: 12px;
+          border-radius: 10px;
+        }
+        .clue-item strong {
+          color: #e5f0ff;
+          display: block;
+          margin-bottom: 6px;
+        }
+        .clue-item p {
           margin: 0;
-          font-size: 1.05rem;
-        }
-
-        .clues-section {
-          margin: 25px 0;
-        }
-
-        .clues-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-
-        .clue-tag {
-          padding: 8px 16px;
-          background: rgba(59, 130, 246, 0.3);
-          color: #dbeafe;
-          border-radius: 20px;
-          font-size: 0.9rem;
-          border: 1px solid #3b82f6;
-        }
-
-        .options-section {
-          margin: 25px 0 0 0;
+          color: #cfe6ff;
         }
 
         .options-grid {
           display: grid;
-          gap: 15px;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 14px;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        }
+        .option-btn {
+          background: linear-gradient(135deg, #60a5fa, #22d3ee);
+          color: #0b1220;
+          border: none;
+          padding: 16px 18px;
+          border-radius: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          box-shadow: 0 8px 18px rgba(96, 165, 250, 0.25);
+          transition: all 0.2s ease;
+        }
+        .option-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 26px rgba(34, 211, 238, 0.28);
         }
 
-        .option-btn {
-          background: linear-gradient(45deg, #1e40af, #3b82f6);
-          color: white;
-          border: none;
-          padding: 18px 24px;
-          border-radius: 12px;
-          font-size: 1.1rem;
+        .ending-wrap {
+          text-align: center;
+        }
+        .ending-text {
+          color: #cfe6ff;
+          font-style: italic;
+          margin-bottom: 12px;
+        }
+        .back-main,
+        .leave-btn {
+          background: transparent;
+          border: 2px solid #60a5fa;
+          color: #e5f0ff;
+          padding: 10px 18px;
+          border-radius: 999px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+          transition: all 0.2s ease;
+        }
+        .back-main:hover,
+        .leave-btn:hover {
+          background: #60a5fa;
+          color: #0b1220;
         }
 
-        .option-btn:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-          background: linear-gradient(45deg, #3b82f6, #60a5fa);
+        .evidence-panel {
+          position: fixed;
+          right: 20px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 280px;
+          background: rgba(2, 6, 23, 0.85);
+          border: 2px solid #22d3ee;
+          border-radius: 14px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+          backdrop-filter: blur(8px);
+          padding: 18px;
         }
-
-        .evidence-sidebar {
-          background: rgba(30, 41, 59, 0.9);
-          padding: 25px;
-          border-radius: 15px;
-          border: 2px solid #60a5fa;
-          box-shadow: 0 8px 32px rgba(96, 165, 250, 0.2);
-          backdrop-filter: blur(10px);
-        }
-
-        .sidebar-title {
-          color: #dbeafe;
-          margin: 0 0 18px 0;
+        .evidence-panel h3 {
+          margin: 0 0 10px 0;
+          color: #60a5fa;
           text-align: center;
-          font-size: 1.3rem;
-          font-weight: 600;
         }
-
-        .evidence-grid {
+        .frag-list {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
           gap: 10px;
         }
-
-        .evidence-tag {
-          background: rgba(96, 165, 250, 0.2);
+        .frag-item {
+          background: rgba(34, 211, 238, 0.1);
+          border: 1.5px solid rgba(34, 211, 238, 0.4);
+          color: #e5f0ff;
           padding: 10px;
-          border-radius: 8px;
-          font-size: 0.9rem;
+          border-radius: 10px;
           text-align: center;
-          border: 1px solid #60a5fa;
-          color: #f1f5f9;
         }
 
-        .back-button {
+        .leave-btn {
           position: fixed;
-          bottom: 25px;
-          left: 25px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: transparent;
-          border: 2px solid #3b82f6;
-          color: #dbeafe;
-          padding: 15px 25px;
-          border-radius: 30px;
-          font-size: 1.05rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          backdrop-filter: blur(10px);
+          bottom: 20px;
+          left: 20px;
         }
 
-        .back-button:hover {
-          background: #3b82f6;
-          color: white;
-          transform: scale(1.05);
-          box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-        }
-
-        @media (max-width: 768px) {
-          .case-header h1 {
-            font-size: 2.2rem;
+        @media (max-width: 900px) {
+          .evidence-panel {
+            position: static;
+            transform: none;
+            width: 100%;
+            margin-top: 20px;
           }
-
-          .options-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .evidence-grid {
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-          }
-
-          .case-container {
-            padding: 15px;
+          .leave-btn {
+            position: static;
+            display: inline-block;
+            margin-top: 18px;
           }
         }
       `}</style>
-    </div>
+    </>
   )
 }
